@@ -38,11 +38,28 @@
     });
 
     document.getElementById('listBtn').addEventListener("click", () => {
-      chrome.storage.local.get(["vocabulary_list", "defintion_list"], (data) => {
-        console.log(data.vocabulary_list);
+      chrome.storage.local.get("vocabulary_list", (data) => {
         let vocabList = data.vocabulary_list || [];
-        let definitionList = data.defintion_list || [];
-        document.getElementById("vocabList").textContent = "Your Vocabulary:\n" + vocabList.map(v => `${v[0]} -> ${v[1]}`).join("\n")
+        let vocabListHtml = document.getElementById("vocabList")
+        vocabListHtml.innerHTML = ''
+        vocabList.forEach((vocab, index) => {
+          const vocabListItem = `<li id='list-item-${index}' style='display: flex;'>
+            <p>${vocab[0]} -> ${vocab[1]}</p>
+            <button id='vocab-${index}'>X</button>
+          </li>`
+          vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
+          const deleteButton = document.getElementById(`vocab-${index}`)
+          deleteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            const index = vocabList.indexOf(vocab);
+            vocabList.splice(index, 1);
+            const domElement = document.getElementById(`list-item-${index}`)
+            console.log(domElement);
+            domElement.remove();
+            console.log(vocabListHtml);
+          })
+        })
+        // document.getElementById("vocabList").textContent = "Your Vocabulary:\n" + vocabList.map(v => `${v[0]} -> ${v[1]}`).join("\n")
         const exportBtn = document.getElementById('exportBtn')
         if (exportBtn.style.display === "none" && vocabList.length > 0) {
           exportBtn.style.display = 'block'

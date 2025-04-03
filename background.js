@@ -1,8 +1,10 @@
-// chrome.runtime.onInstalled.addListener(() => {
-//   chrome.storage.local.set({ "DEEPL_API_KEY": CONFIG.API_KEY }, () => {
-//       console.log("DeepL API key stored securely.");
-//   });
-// });
+chrome.action.onClicked.addListener((tab) => {
+  chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content.js"]
+  });
+});
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'translate') {
@@ -65,14 +67,6 @@ async function translateText(text) {
 async function simplifyText(text) {
   // Retrieve API key
   const { OPENAI_API_KEY } = await chrome.storage.local.get('OPENAI_API_KEY');
-  // const promp = `Ich werde dir ein deutsches Wort, einen Satz oder einen Text geben.
-  //               Deine Aufgabe ist es, mir eine vereinfachte Version davon zurückzugeben.
-  //               Halte die Bedeutung möglichst genau, aber mache es einfacher zu verstehen.
-
-  //               Hier ist meine Eingabe:
-  //               "${text}"
-  //               Gib nur die vereinfachte Version zurück, ohne weitere Erklärungen.`;
-  // Make API call to openAI
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: 'POST',
       headers: {
