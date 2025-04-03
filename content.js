@@ -54,6 +54,7 @@ function createPopup(selectedText) {
     });
     document.getElementById("btn2").addEventListener("click", () => {
       simplify(selectedText);
+      popup.remove()
     });
     document.getElementById("btn3").addEventListener("click", (event) => {
       if (event.target.innerHTML === 'pause') {
@@ -76,9 +77,15 @@ function simplify(selectedText) {
     if (response.simplified) {
       // document.getElementById('text-action-result').textContent = response.translation;
       const simplified = response.simplified;
-
-      defintion_list.push([selectedText, simplified]);
-      chrome.storage.local.set({ defintion_list });
+      const xpath = `//*[contains(text(), '${selectedText}')]`;
+      const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+      const foundElement = result.singleNodeValue;
+      console.log(foundElement); // Returns the found element or null
+      const regex = new RegExp(selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
+      const highlightedReplacement = `<span class="highlighted-text">${simplified}</span>`
+      foundElement.innerHTML = foundElement.innerHTML.replace(regex, highlightedReplacement);
+      // defintion_list.push([selectedText, simplified]);
+      // chrome.storage.local.set({ defintion_list });
       const popup = document.getElementById('customPopup');
       popup.insertAdjacentHTML('beforeend', `<p id="text-action-result">Simplified: ${simplified}</p>`);
     } else {
@@ -117,3 +124,16 @@ function pronounce(selectedText) {
     isSpeaking = true;
   }
 }
+
+const style = document.createElement('style')
+style.innerHTML = `
+  .highlighted-text {
+    background-color: yellow;
+    color: black;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+`;
+
+document.head.appendChild(style);
