@@ -39,9 +39,11 @@ function createPopup(selectedText) {
   // Add buttons
   popup.innerHTML = `
     <button id="closePopup" style="text-align: end;">X</button>
-    <button id="btn1">translate</button>
-    <button id="btn2">simplify</button>
-    <button id="btn3">pronounce</button>
+    <div id="popup-styling">
+      <button id="btn1">translate</button>
+      <button id="btn2">simplify</button>
+      <button id="btn3">pronounce</button>
+    </div>
   `;
 
   // Append popup to body
@@ -130,10 +132,40 @@ style.innerHTML = `
   .highlighted-text {
     background-color: yellow;
     color: black;
-    font-weight: bold;
+    font-weight: bold;v
     padding: 2px 4px;
     border-radius: 3px;
   }
 `;
 
 document.head.appendChild(style);
+
+
+window.addEventListener("scroll", () => {
+  const scrollPosition = window.scrollY + window.innerHeight;
+  const totalPosition = document.documentElement.scrollHeight;
+
+  const scrollPercentage = (scrollPosition / totalPosition) * 100
+
+  if (scrollPercentage >= 70) {
+    let exercisePopup = document.createElement("div");
+    exercisePopup.id = "exercisePopup";
+
+    exercisePopup.style.position = "fixed";
+    exercisePopup.style.top = '50%'; // Adjust Y position
+    exercisePopup.style.left = '50%'; // Adjust X position
+    exercisePopup.style.transform = "translate(-50%, -50%)";
+    exercisePopup.style.background = "white";
+    exercisePopup.style.border = "1px solid black";
+    exercisePopup.style.padding = "20px";
+    exercisePopup.style.zIndex = "9999";
+
+    // Add buttons
+    exercisePopup.innerHTML = `
+      <button id="exercise-btn">Test your understanding</button>
+    `;
+
+    // Append exercisePopup to body
+    document.body.appendChild(exercisePopup);
+  }
+})

@@ -19,11 +19,33 @@
   cursor: pointer;
 }
 
+#popup-styling {
+  padding-top: 20px;
+
+  button {
+    background-color: blue;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+  }
+}
+
+#closePopup {
+  background: transparent;
+  padding: 5px;
+  color: grey;
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: none;
+}
+
 #text-action-result {
   margin-top: 10px;
   font-style: italic;
   max-height: 100px;
   overflow-y: auto;
+  color: black;
 }
 
 pre {
@@ -31,4 +53,3 @@ pre {
   font-size: 10px;
   font-weight: 400;
 }
-
