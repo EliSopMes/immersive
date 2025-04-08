@@ -82,14 +82,13 @@ function simplify(selectedText) {
       const xpath = `//*[contains(text(), '${selectedText}')]`;
       const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
       const foundElement = result.singleNodeValue;
-      console.log(foundElement); // Returns the found element or null
-      const regex = new RegExp(selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
-      const highlightedReplacement = `<span class="highlighted-text">${simplified}</span>`
-      foundElement.innerHTML = foundElement.innerHTML.replace(regex, highlightedReplacement);
-      // defintion_list.push([selectedText, simplified]);
-      // chrome.storage.local.set({ defintion_list });
-      const popup = document.getElementById('customPopup');
-      popup.insertAdjacentHTML('beforeend', `<p id="text-action-result">Simplified: ${simplified}</p>`);
+      if (foundElement !== null) {
+        const regex = new RegExp(selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
+        const highlightedReplacement = `<span class="highlighted-text">${simplified}</span>`
+        foundElement.innerHTML = foundElement.innerHTML.replace(regex, highlightedReplacement);
+      } else {
+        console.log("foundElement is null")
+      }
     } else {
       document.getElementById('text-action-result').textContent = 'Translation failed';
     }
@@ -162,10 +161,17 @@ window.addEventListener("scroll", () => {
 
     // Add buttons
     exercisePopup.innerHTML = `
+      <button id="closePopup" style="text-align: end;">X</button>
       <button id="exercise-btn">Test your understanding</button>
     `;
 
     // Append exercisePopup to body
     document.body.appendChild(exercisePopup);
+    setTimeout(() => {
+      document.getElementById("exercise-btn").addEventListener("click", () => {
+        exercisePopup.remove()
+      });
+      document.getElementById("closePopup").addEventListener("click", () => exercisePopup.remove());
+    }, 100);
   }
 })
