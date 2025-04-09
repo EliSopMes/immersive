@@ -38,7 +38,7 @@ function createPopup(selectedText) {
 
   // Add buttons
   popup.innerHTML = `
-    <button id="closePopup" style="text-align: end;">X</button>
+    <button class="closePopup" style="text-align: end;">X</button>
     <div id="popup-styling">
       <button id="btn1">translate</button>
       <button id="btn2">simplify</button>
@@ -66,10 +66,39 @@ function createPopup(selectedText) {
       }
       pronounce(selectedText);
     });
-    document.getElementById("closePopup").addEventListener("click", () => popup.remove());
+    document.querySelector(".closePopup").addEventListener("click", () => {
+      popup.remove();
+      cleanup();
+    });
   }, 100);  // Small delay ensures the elements exist
-}
 
+  function cleanup() {
+    document.removeEventListener("click", handleOutsideClick);
+    window.removeEventListener("scroll", handleScroll());
+  }
+
+  function handleOutsideClick(event) {
+    if (!popup.contains(event.target)) {
+      popup.remove();
+      cleanup();
+    }
+  }
+
+  function handleScroll() {
+    const popupRect = popup.getBoundingClientRect();
+    const isOutOfView =
+      popupRect.bottom < 0 || popupRect.top > window.innerHeight;
+
+    if (isOutOfView) {
+      popup.remove();
+      cleanup();
+    }
+  }
+  setTimeout(() => {
+    document.addEventListener("click", handleOutsideClick);
+  }, 0);
+  window.addEventListener("scroll", handleScroll);
+}
 
 function simplify(selectedText) {
   chrome.runtime.sendMessage({
@@ -79,15 +108,59 @@ function simplify(selectedText) {
     if (response.simplified) {
       // document.getElementById('text-action-result').textContent = response.translation;
       const simplified = response.simplified;
-      const xpath = `//*[contains(text(), '${selectedText}')]`;
-      const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-      const foundElement = result.singleNodeValue;
-      if (foundElement !== null) {
-        const regex = new RegExp(selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
-        const highlightedReplacement = `<span class="highlighted-text">${simplified}</span>`
-        foundElement.innerHTML = foundElement.innerHTML.replace(regex, highlightedReplacement);
-      } else {
-        console.log("foundElement is null")
+      const selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const foundElement = container.nodeType === 3 ? container.parentElement :container;
+        if (foundElement !== null) {
+          const regex = new RegExp(selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
+          const highlightedReplacement = `<span class="highlighted-text">${simplified}</span>`
+          foundElement.innerHTML = foundElement.innerText.replace(regex, highlightedReplacement);
+
+           // Create the popup container
+          let backPopup = document.createElement("div");
+          backPopup.id = "backPopup";
+
+          // Get selection coordinates
+          const selection = window.getSelection();
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+
+          backPopup.style.position = "absolute";
+          backPopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+          backPopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+          backPopup.style.background = "white";
+          backPopup.style.border = "1px solid black";
+          backPopup.style.padding = "20px";
+          backPopup.style.zIndex = "9999";
+          backPopup.style.boxShadow = "0px 0px 10px rgba(0,0,0,0.2)";
+
+          // Add buttons
+          backPopup.innerHTML = `
+            <button class="closePopup" style="text-align: end;">X</button>
+            <div id="backPopup-styling">
+              <button id="btn-back">Back to original</button>
+            </div>
+          `;
+
+          // Append backPopup to body
+          document.body.appendChild(backPopup);
+
+          // ✅ Ensure Event Listeners Work
+          setTimeout(() => {
+            document.getElementById("btn-back").addEventListener("click", () => {
+              const regexBack = new RegExp(simplified.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"); // Escape special characters
+              const backReplacement = `<span>${selectedText}</span>`
+              foundElement.innerHTML = foundElement.innerText.replace(regexBack, backReplacement);
+            });
+            document.getElementById("backPopup").addEventListener("click", () => {
+              backPopup.remove();
+            });
+          }, 100);
+        } else {
+          console.log("foundElement is null")
+        }
       }
     } else {
       document.getElementById('text-action-result').textContent = 'Translation failed';
@@ -161,7 +234,7 @@ window.addEventListener("scroll", () => {
 
     // Add buttons
     exercisePopup.innerHTML = `
-      <button id="closePopup" style="text-align: end;">X</button>
+      <button class="closePopup" style="text-align: end;">X</button>
       <button id="exercise-btn">Test your understanding</button>
     `;
 
@@ -171,7 +244,7 @@ window.addEventListener("scroll", () => {
       document.getElementById("exercise-btn").addEventListener("click", () => {
         exercisePopup.remove()
       });
-      document.getElementById("closePopup").addEventListener("click", () => exercisePopup.remove());
+      document.querySelector(".closePopup").addEventListener("click", () => exercisePopup.remove());
     }, 100);
   }
 })

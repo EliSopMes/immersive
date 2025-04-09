@@ -19,7 +19,7 @@
   cursor: pointer;
 }
 
-#popup-styling {
+#popup-styling, #backPopup-styling {
   padding-top: 20px;
 
   button {
@@ -30,7 +30,7 @@
   }
 }
 
-#closePopup {
+.closePopup {
   background: transparent;
   padding: 5px;
   color: grey;
