@@ -28,6 +28,7 @@ function createPopup(selectedText) {
   const rect = range.getBoundingClientRect();
 
   popup.style.position = "absolute";
+  popup.style.fontFamily = "'Poppins', sans-serif";
   popup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
   popup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
   popup.style.background = "white";
@@ -40,9 +41,9 @@ function createPopup(selectedText) {
   popup.innerHTML = `
     <button class="closePopup" style="text-align: end;">X</button>
     <div id="popup-styling">
-      <button id="btn1">translate</button>
-      <button id="btn2">simplify</button>
-      <button id="btn3">pronounce</button>
+      <button id="btn1">Translate</button>
+      <button id="btn2">Simplify</button>
+      <button id="btn3">Pronounce</button>
     </div>
   `;
 
@@ -128,6 +129,7 @@ function simplify(selectedText) {
           const rect = range.getBoundingClientRect();
 
           backPopup.style.position = "absolute";
+          backPopup.style.fontFamily = "'Poppins', sans-serif";
           backPopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
           backPopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
           backPopup.style.background = "white";
@@ -224,6 +226,7 @@ window.addEventListener("scroll", () => {
     exercisePopup.id = "exercisePopup";
 
     exercisePopup.style.position = "fixed";
+    exercisePopup.style.fontFamily = "'Poppins', sans-serif";
     exercisePopup.style.top = '50%'; // Adjust Y position
     exercisePopup.style.left = '50%'; // Adjust X position
     exercisePopup.style.transform = "translate(-50%, -50%)";

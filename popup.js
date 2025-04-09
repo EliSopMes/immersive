@@ -1,7 +1,6 @@
  document.addEventListener('DOMContentLoaded', () => {
    document.getElementById("translateBtn").addEventListener("click", async () => {
       let text = document.getElementById("inputText").value;
-      console.log(text)
       if (!text) return;
 
       chrome.storage.local.get("DEEPL_API_KEY", async (data) => {
@@ -10,7 +9,6 @@
          console.error("Deeply API key not found");
          return;
         } else {
-          console.log(apiKey)
           const url = "https://api-free.deepl.com/v2/translate";
 
           const response = await fetch(url, {
@@ -25,11 +23,15 @@
                   source_lang: "DE"
               })
           });
-          console.log(response);
           const data = await response.json();
           if (data.translations) {
-            document.getElementById("output").textContent = data.translations[0].text;
-            console.log(data.translations[0]);
+            const translated = data.translations[0].text;
+            document.getElementById("output").textContent = translated;
+            chrome.storage.local.get("vocabulary_list", (data) => {
+              let vocabulary_list = data.vocabulary_list || [];
+              vocabulary_list.push([text, translated]);
+              chrome.storage.local.set({ vocabulary_list });
+            });
           } else {
             console.log('oh noooooo');
           }
@@ -37,14 +39,15 @@
       })
     });
 
-    document.getElementById('listBtn').addEventListener("click", () => {
+    const listBtn = document.getElementById('listBtn')
+    listBtn.addEventListener("click", () => {
       chrome.storage.local.get("vocabulary_list", (data) => {
         let vocabList = data.vocabulary_list || [];
         let vocabListHtml = document.getElementById("vocabList")
         vocabListHtml.innerHTML = ''
         vocabList.forEach((vocab, index) => {
           const vocabListItem = `<li id='list-item-${index}' style='display: flex;'>
-            <p>${vocab[0]} -> ${vocab[1]}</p>
+            <p style="margin-right: 5px;">${vocab[0]} -> ${vocab[1]}</p>
             <button id='vocab-${index}'>X</button>
           </li>`
           vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
@@ -54,40 +57,45 @@
             const index = vocabList.indexOf(vocab);
             vocabList.splice(index, 1);
             const domElement = document.getElementById(`list-item-${index}`)
-            console.log(domElement);
             domElement.remove();
-            console.log(vocabListHtml);
           })
         })
+        vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
+        vocabListHtml.insertAdjacentHTML("afterbegin", `<h2>Your looked up vocabulary:</h2>`)
         // document.getElementById("vocabList").textContent = "Your Vocabulary:\n" + vocabList.map(v => `${v[0]} -> ${v[1]}`).join("\n")
-        const exportBtn = document.getElementById('exportBtn')
-        if (exportBtn.style.display === "none" && vocabList.length > 0) {
-          exportBtn.style.display = 'block'
-          exportBtn.addEventListener('click', () => {
-            console.log("reached download");
-            let textContent = "German\tEnglish\n";
-            vocabList.forEach(([german, english]) => {
-              textContent += `${german}\t${english}\n`;
-            });
-
-            // Create a Blob with the text data
-            let blob = new Blob([textContent], { type: "text/plain" });
-
-            // Create a download link
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "vocabulary_list.txt"; // Name of the file
-
-            // Trigger the download
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-          })
-        } else {
-          exportBtn.style.display = 'none'
-        }
       });
+      listBtn.style.display = "none"
     })
 
+
+    const vocabListDiv = document.getElementById('vocab-div')
+    chrome.storage.local.get("vocabulary_list", (data) => {
+      let vocabList = data.vocabulary_list || [];
+      if (vocabListDiv.style.display === "none" && vocabList.length > 0) {
+        vocabListDiv.style.display = 'block'
+        const exportBtn = document.getElementById('exportBtn')
+        exportBtn.addEventListener('click', () => {
+          let textContent = "German\tEnglish\n";
+          vocabList.forEach(([german, english]) => {
+            textContent += `${german}\t${english}\n`;
+          });
+
+          // Create a Blob with the text data
+          let blob = new Blob([textContent], { type: "text/plain" });
+
+          // Create a download link
+          let link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "vocabulary_list.txt"; // Name of the file
+
+          // Trigger the download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+        })
+      } else {
+        vocabListDiv.style.display = 'none'
+      }
+    });
  })
