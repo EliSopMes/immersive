@@ -19,7 +19,7 @@
   cursor: pointer;
 }
 
-#popup-styling, #backPopup-styling {
+/* #popup-styling, #backPopup-styling {
   padding-top: 20px;
 
   button {
@@ -29,16 +29,55 @@
     border-radius: 8px;
     font-family: "Poppins", sans-serif;
   }
+} */
+
+#popup-styling {
+  img {
+    height: 28px;
+    color: black;
+    justify-content: space-between;
+    background: transparent;
+  }
+
+  img:hover {
+    cursor: pointer;
+  }
+
+  button {
+    background: transparent;
+    padding: 0px;
+    color: grey;
+    border: none;
+  }
 }
 
-.closePopup {
-  background: transparent;
-  padding: 5px;
-  color: grey;
-  position: absolute;
-  right: 0;
-  top: 0;
-  border: none;
+#choice-popup-styling {
+  display: flex;
+  justify-content: space-between;
+  width: 124px;
+  margin-left: 180px;
+
+  img {
+    height: 22px;
+    color: black;
+    justify-content: space-between;
+    background: transparent;
+  }
+
+  img:hover {
+    cursor: pointer;
+  }
+
+}
+
+#choicePopup {
+  button {
+    background: transparent;
+    padding: 0px;
+    color: grey;
+    border: none;
+    margin: 4px 0px 8px 0px
+  }
 }
 
 #text-action-result {
