@@ -38,30 +38,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function translateText(text) {
-  // Retrieve API key
-  const { DEEPL_API_KEY } = await chrome.storage.local.get('DEEPL_API_KEY');
-
-  // Make API call to DeepL
-  const response = await fetch('https://api-free.deepl.com/v2/translate', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`
-      },
-      body: JSON.stringify({
-          text: [text],
-          target_lang: 'EN',
-          source_lang: 'DE'
-      })
-  });
-
-  const data = await response.json();
-
-  if (data.translations && data.translations.length > 0) {
-      return data.translations[0].text;
-  } else {
-      throw new Error('Translation failed');
-  }
+  fetch("https://your-site.netlify.app/.netlify/functions/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: text })
+  })
+  .then(res => res.json())
+  .then(data => console.log(data.simplified));
 }
 
 async function simplifyText(text) {

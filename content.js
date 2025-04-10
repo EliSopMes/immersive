@@ -170,22 +170,32 @@ function simplify(selectedText) {
   });
 }
 function translate(selectedText) {
-  chrome.runtime.sendMessage({
-    action: 'translate',
-    text: selectedText
-  }, (response) => {
-    if (response.translation) {
-      const translation = response.translation;
+  fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: selectedText })
+  })
+  .then(res => res.json())
+  .then(data => console.log(data.simplified));
 
-      vocabulary_list.push([selectedText, translation]);
-      chrome.storage.local.set({ vocabulary_list });
-      const popup = document.getElementById('customPopup');
-      popup.insertAdjacentHTML('beforeend', `<p id="text-action-result">Translated: ${translation}</p>`)
-    } else {
-      document.getElementById('text-action-result').textContent = 'Translation failed';
-    }
-  });
+
+  // chrome.runtime.sendMessage({
+  //   action: 'translate',
+  //   text: selectedText
+  // }, (response) => {
+  //   if (response.translation) {
+  //     const translation = response.translation;
+
+  //     vocabulary_list.push([selectedText, translation]);
+  //     chrome.storage.local.set({ vocabulary_list });
+  //     const popup = document.getElementById('customPopup');
+  //     popup.insertAdjacentHTML('beforeend', `<p id="text-action-result">Translated: ${translation}</p>`)
+  //   } else {
+  //     document.getElementById('text-action-result').textContent = 'Translation failed';
+  //   }
+  // });
 }
+
 function pronounce(selectedText) {
   if (isSpeaking) {
     window.speechSynthesis.cancel(); // Stop speech if already speaking
