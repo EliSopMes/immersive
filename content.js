@@ -280,39 +280,39 @@ style.innerHTML = `
 document.head.appendChild(style);
 
 
-window.addEventListener("scroll", () => {
-  const scrollPosition = window.scrollY + window.innerHeight;
-  const totalPosition = document.documentElement.scrollHeight;
+// window.addEventListener("scroll", () => {
+//   const scrollPosition = window.scrollY + window.innerHeight;
+//   const totalPosition = document.documentElement.scrollHeight;
 
-  const scrollPercentage = (scrollPosition / totalPosition) * 100
+//   const scrollPercentage = (scrollPosition / totalPosition) * 100
 
-  if (scrollPercentage >= 70) {
-    let exercisePopup = document.createElement("div");
-    exercisePopup.id = "exercisePopup";
+//   if (scrollPercentage >= 70) {
+//     let exercisePopup = document.createElement("div");
+//     exercisePopup.id = "exercisePopup";
 
-    exercisePopup.style.position = "fixed";
-    exercisePopup.style.fontFamily = "'Poppins', sans-serif";
-    exercisePopup.style.top = '50%'; // Adjust Y position
-    exercisePopup.style.left = '50%'; // Adjust X position
-    exercisePopup.style.transform = "translate(-50%, -50%)";
-    exercisePopup.style.background = "white";
-    exercisePopup.style.border = "1px solid black";
-    exercisePopup.style.padding = "20px";
-    exercisePopup.style.zIndex = "9999";
+//     exercisePopup.style.position = "fixed";
+//     exercisePopup.style.fontFamily = "'Poppins', sans-serif";
+//     exercisePopup.style.top = '50%'; // Adjust Y position
+//     exercisePopup.style.left = '50%'; // Adjust X position
+//     exercisePopup.style.transform = "translate(-50%, -50%)";
+//     exercisePopup.style.background = "white";
+//     exercisePopup.style.border = "1px solid black";
+//     exercisePopup.style.padding = "20px";
+//     exercisePopup.style.zIndex = "9999";
 
-    // Add buttons
-    exercisePopup.innerHTML = `
-      <button class="closePopup" style="text-align: end;">X</button>
-      <button id="exercise-btn">Test your understanding</button>
-    `;
+//     // Add buttons
+//     exercisePopup.innerHTML = `
+//       <button class="closePopup" style="text-align: end;">X</button>
+//       <button id="exercise-btn">Test your understanding</button>
+//     `;
 
-    // Append exercisePopup to body
-    document.body.appendChild(exercisePopup);
-    setTimeout(() => {
-      document.getElementById("exercise-btn").addEventListener("click", () => {
-        exercisePopup.remove()
-      });
-      document.querySelector(".closePopup").addEventListener("click", () => exercisePopup.remove());
-    }, 100);
-  }
-})
+//     // Append exercisePopup to body
+//     document.body.appendChild(exercisePopup);
+//     setTimeout(() => {
+//       document.getElementById("exercise-btn").addEventListener("click", () => {
+//         exercisePopup.remove()
+//       });
+//       document.querySelector(".closePopup").addEventListener("click", () => exercisePopup.remove());
+//     }, 100);
+//   }
+// })

@@ -52,10 +52,11 @@
 }
 
 #choice-popup-styling {
-  display: flex;
-  justify-content: space-between;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
   width: 124px;
-  margin-left: 180px;
+  margin-top: 10px;
 
   img {
     height: 22px;
@@ -71,6 +72,8 @@
 }
 
 #choicePopup {
+  padding-bottom: 20px;
+
   button {
     background: transparent;
     padding: 0px;
