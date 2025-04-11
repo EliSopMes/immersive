@@ -2,39 +2,23 @@
    document.getElementById("translateBtn").addEventListener("click", async () => {
       let text = document.getElementById("inputText").value;
       if (!text) return;
-
-      chrome.storage.local.get("DEEPL_API_KEY", async (data) => {
-        const apiKey = data.DEEPL_API_KEY;
-        if (!apiKey) {
-         console.error("Deeply API key not found");
-         return;
-        } else {
-          const url = "https://api-free.deepl.com/v2/translate";
-
-          const response = await fetch(url, {
-              method: "POST",
-              headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `DeepL-Auth-Key ${apiKey}`
-              },
-              body: JSON.stringify({
-                  text: [text],
-                  target_lang: "EN",
-                  source_lang: "DE"
-              })
+      fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const translation = data.translated;
+        if (translation) {
+          document.getElementById("output").textContent = translation;
+          chrome.storage.local.get("vocabulary_list", (data) => {
+            let vocabulary_list = data.vocabulary_list || [];
+            vocabulary_list.push([text, translation]);
+            chrome.storage.local.set({ vocabulary_list });
           });
-          const data = await response.json();
-          if (data.translations) {
-            const translated = data.translations[0].text;
-            document.getElementById("output").textContent = translated;
-            chrome.storage.local.get("vocabulary_list", (data) => {
-              let vocabulary_list = data.vocabulary_list || [];
-              vocabulary_list.push([text, translated]);
-              chrome.storage.local.set({ vocabulary_list });
-            });
-          } else {
-            console.log('oh noooooo');
-          }
+        } else {
+          console.log('oh noooooo');
         }
       })
     });
@@ -74,26 +58,28 @@
       if (vocabListDiv.style.display === "none" && vocabList.length > 0) {
         vocabListDiv.style.display = 'block'
         const exportBtn = document.getElementById('exportBtn')
-        exportBtn.addEventListener('click', () => {
-          let textContent = "German\tEnglish\n";
-          vocabList.forEach(([german, english]) => {
-            textContent += `${german}\t${english}\n`;
-          });
+        if (exportBtn !== null) {
+          exportBtn.addEventListener('click', () => {
+            let textContent = "German\tEnglish\n";
+            vocabList.forEach(([german, english]) => {
+              textContent += `${german}\t${english}\n`;
+            });
 
-          // Create a Blob with the text data
-          let blob = new Blob([textContent], { type: "text/plain" });
+            // Create a Blob with the text data
+            let blob = new Blob([textContent], { type: "text/plain" });
 
-          // Create a download link
-          let link = document.createElement("a");
-          link.href = URL.createObjectURL(blob);
-          link.download = "vocabulary_list.txt"; // Name of the file
+            // Create a download link
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "vocabulary_list.txt"; // Name of the file
 
-          // Trigger the download
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+            // Trigger the download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
-        })
+          })
+        }
       } else {
         vocabListDiv.style.display = 'none'
       }
