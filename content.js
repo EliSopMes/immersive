@@ -106,149 +106,146 @@ function createPopup(selectedText) {
 }
 
 function simplify(selectedText) {
-  chrome.runtime.sendMessage({
-    action: 'simplify',
-    text: selectedText
-  }, (response) => {
-    if (response.simplified) {
-      // document.getElementById('text-action-result').textContent = response.translation;
-      const simplified = response.simplified;
+  fetch("https://immersive-server.netlify.app/.netlify/functions/simplify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: selectedText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const simplified = data.simplified;
 
+    let choicePopup = document.createElement("div");
+    choicePopup.id = "choicePopup";
 
-      let choicePopup = document.createElement("div");
-      choicePopup.id = "choicePopup";
+    // Get selection coordinates
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
 
-      // Get selection coordinates
-      const selection = window.getSelection();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+    choicePopup.style.position = "absolute";
+    choicePopup.style.width = "305px";
+    choicePopup.style.fontFamily = "'Poppins', sans-serif";
+    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+    choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+    choicePopup.style.background = "white";
+    choicePopup.style.border = "1px solid #D9D9D9";
+    choicePopup.style.borderRadius = "8px";
+    choicePopup.style.padding = "8px 12px";
+    choicePopup.style.zIndex = "9999";
+    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
-      choicePopup.style.position = "absolute";
-      choicePopup.style.width = "305px";
-      choicePopup.style.fontFamily = "'Poppins', sans-serif";
-      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-      choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
-      choicePopup.style.background = "white";
-      choicePopup.style.border = "1px solid #D9D9D9";
-      choicePopup.style.borderRadius = "8px";
-      choicePopup.style.padding = "8px 12px";
-      choicePopup.style.zIndex = "9999";
-      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-
-      // Add buttons
-      choicePopup.innerHTML = `
-        <div id="choicePopup">
-          <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-            <button class="closePopup">X</button>
-          </div>
-          <hr>
-          <p>${simplified}</p>
-          <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
-            <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="simplification" class="context-icons">
-          </div>
+    // Add buttons
+    choicePopup.innerHTML = `
+      <div id="choicePopup">
+        <div style="display: flex; justify-content: space-between;">
+          <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+          <button class="closePopup">X</button>
         </div>
-      `;
+        <hr>
+        <p>${simplified}</p>
+        <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
+          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
+          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
+          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
+          <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="simplification" class="context-icons">
+        </div>
+      </div>
+    `;
 
-      // Append choicePopup to body
-      document.body.appendChild(choicePopup);
+    // Append choicePopup to body
+    document.body.appendChild(choicePopup);
 
-      setTimeout(() => {
-        document.getElementById("btn-copy").addEventListener("click", () => {
-          navigator.clipboard.writeText(translation);
-        });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
-          vocabulary_list.push([selectedText, translation]);
-          chrome.storage.local.set({ vocabulary_list });
-        });
-        document.getElementById("btn-translate").addEventListener("click", () => {
-          translate(simplified);
-        });
-        document.getElementById("btn-audio").addEventListener("click", (event) => {
-          pronounce(translation, 'de');
-        });
-        document.querySelector(".closePopup").addEventListener("click", () => {
-          choicePopup.remove();
-        });
-      }, 100);
-    } else {
-      document.getElementById('text-action-result').textContent = 'Translation failed';
-    }
+    setTimeout(() => {
+      document.getElementById("btn-copy").addEventListener("click", () => {
+        navigator.clipboard.writeText(translation);
+      });
+      document.getElementById("btn-vocab").addEventListener("click", () => {
+        vocabulary_list.push([selectedText, translation]);
+        chrome.storage.local.set({ vocabulary_list });
+      });
+      document.getElementById("btn-translate").addEventListener("click", () => {
+        translate(simplified);
+      });
+      document.getElementById("btn-audio").addEventListener("click", (event) => {
+        pronounce(translation, 'de');
+      });
+      document.querySelector(".closePopup").addEventListener("click", () => {
+        choicePopup.remove();
+      });
+    }, 100);
   });
 }
+
 function translate(selectedText) {
-  chrome.runtime.sendMessage({
-    action: 'translate',
-    text: selectedText
-  }, (response) => {
-    if (response.translation) {
-      const translation = response.translation;
+  fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: selectedText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const translation = data.translated;
 
-      let choicePopup = document.createElement("div");
-      choicePopup.id = "choicePopup";
+    let choicePopup = document.createElement("div");
+    choicePopup.id = "choicePopup";
 
-      // Get selection coordinates
-      const selection = window.getSelection();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+    // Get selection coordinates
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
 
-      choicePopup.style.position = "absolute";
-      choicePopup.style.width = "305px";
-      choicePopup.style.fontFamily = "'Poppins', sans-serif";
-      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-      choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
-      choicePopup.style.background = "white";
-      choicePopup.style.border = "1px solid #D9D9D9";
-      choicePopup.style.borderRadius = "8px";
-      choicePopup.style.padding = "8px 12px";
-      choicePopup.style.zIndex = "9999";
-      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+    choicePopup.style.position = "absolute";
+    choicePopup.style.width = "305px";
+    choicePopup.style.fontFamily = "'Poppins', sans-serif";
+    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+    choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+    choicePopup.style.background = "white";
+    choicePopup.style.border = "1px solid #D9D9D9";
+    choicePopup.style.borderRadius = "8px";
+    choicePopup.style.padding = "8px 12px";
+    choicePopup.style.zIndex = "9999";
+    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
-      // Add buttons
-      choicePopup.innerHTML = `
-        <div id="choicePopup">
-          <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-            <button class="closePopup">X</button>
-          </div>
-          <hr>
-          <p>${translation}</p>
-          <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
-            <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplification" class="context-icons">
-          </div>
+    // Add buttons
+    choicePopup.innerHTML = `
+      <div id="choicePopup">
+        <div style="display: flex; justify-content: space-between;">
+          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+          <button class="closePopup">X</button>
         </div>
-      `;
+        <hr>
+        <p>${translation}</p>
+        <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
+          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
+          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
+          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
+          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplification" class="context-icons">
+        </div>
+      </div>
+    `;
 
-      // Append choicePopup to body
-      document.body.appendChild(choicePopup);
+    // Append choicePopup to body
+    document.body.appendChild(choicePopup);
 
-      setTimeout(() => {
-        document.getElementById("btn-copy").addEventListener("click", () => {
-          navigator.clipboard.writeText(translation);
-        });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
-          vocabulary_list.push([selectedText, translation]);
-          chrome.storage.local.set({ vocabulary_list });
-        });
-        document.getElementById("btn-simple").addEventListener("click", () => {
-          simplify(translation);
-        });
-        document.getElementById("btn-audio").addEventListener("click", (event) => {
-          pronounce(translation, 'en');
-        });
-        document.querySelector(".closePopup").addEventListener("click", () => {
-          choicePopup.remove();
-        });
-      }, 100);
-    } else {
-      document.getElementById('text-action-result').textContent = 'Translation failed';
-    }
+    setTimeout(() => {
+      document.getElementById("btn-copy").addEventListener("click", () => {
+        navigator.clipboard.writeText(translation);
+      });
+      document.getElementById("btn-vocab").addEventListener("click", () => {
+        vocabulary_list.push([selectedText, translation]);
+        chrome.storage.local.set({ vocabulary_list });
+      });
+      document.getElementById("btn-simple").addEventListener("click", () => {
+        simplify(translation);
+      });
+      document.getElementById("btn-audio").addEventListener("click", (event) => {
+        pronounce(translation, 'en');
+      });
+      document.querySelector(".closePopup").addEventListener("click", () => {
+        choicePopup.remove();
+      });
+    }, 100);
   });
 }
 function pronounce(selectedText, language) {
