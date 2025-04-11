@@ -47,9 +47,9 @@ function createPopup(selectedText) {
   // Add buttons
   popup.innerHTML = `
     <div id="popup-styling" style="display: flex; justify-content: space-between;">
-      <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" class="context-icons">
-      <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplification" class="context-icons">
-      <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
+      <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+      <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
+      <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
       <button class="closePopup">X</button>
     </div>
   `;
@@ -152,10 +152,10 @@ function simplify(selectedText) {
         <hr>
         <p>${simplified}</p>
         <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
-          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
-          <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="simplification" class="context-icons">
+          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+          <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
         </div>
       </div>
     `;
@@ -197,7 +197,7 @@ function translate(selectedText) {
 
     let oldPopup = document.getElementById("choicePopup");
     if (oldPopup) oldPopup.remove();
-    
+
     let choicePopup = document.createElement("div");
     choicePopup.id = "choicePopup";
 
@@ -228,10 +228,10 @@ function translate(selectedText) {
         <hr>
         <p>${translation}</p>
         <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" class="context-icons">
-          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="audio" class="context-icons">
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="translate" class="context-icons">
-          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplification" class="context-icons">
+          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
         </div>
       </div>
     `;

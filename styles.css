@@ -19,24 +19,13 @@
   cursor: pointer;
 }
 
-/* #popup-styling, #backPopup-styling {
-  padding-top: 20px;
-
-  button {
-    background-color: black;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 8px;
-    font-family: "Poppins", sans-serif;
-  }
-} */
-
 #popup-styling {
   img {
     height: 28px;
     color: black;
     justify-content: space-between;
     background: transparent;
+    position: relative;
   }
 
   img:hover {
@@ -49,6 +38,22 @@
     color: grey;
     border: none;
   }
+}
+
+#popup-styling img:hover::after {
+  content: attr(alt);
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 9999;
+  font-family: 'Poppins', sans-serif;
 }
 
 #choice-popup-styling {
