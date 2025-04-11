@@ -17,6 +17,10 @@ function createPopup(selectedText) {
   if (existingPopup) {
     existingPopup.remove();
   }
+  let choicePopup = document.getElementById("choicePopup");
+  if (choicePopup) {
+    choicePopup.remove();
+  }
 
   // Create the popup container
   let popup = document.createElement("div");
@@ -115,6 +119,9 @@ function simplify(selectedText) {
   .then(data => {
     const simplified = data.simplified;
 
+    let oldPopup = document.getElementById("choicePopup");
+    if (oldPopup) oldPopup.remove();
+
     let choicePopup = document.createElement("div");
     choicePopup.id = "choicePopup";
 
@@ -168,9 +175,10 @@ function simplify(selectedText) {
         translate(simplified);
       });
       document.getElementById("btn-audio").addEventListener("click", (event) => {
-        pronounce(translation, 'de');
+        pronounce(simplified, 'de');
       });
       document.querySelector(".closePopup").addEventListener("click", () => {
+        console.log("popup reached")
         choicePopup.remove();
       });
     }, 100);
@@ -187,6 +195,9 @@ function translate(selectedText) {
   .then(data => {
     const translation = data.translated;
 
+    let oldPopup = document.getElementById("choicePopup");
+    if (oldPopup) oldPopup.remove();
+    
     let choicePopup = document.createElement("div");
     choicePopup.id = "choicePopup";
 
