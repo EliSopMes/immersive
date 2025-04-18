@@ -48,14 +48,17 @@
             <button id='vocab-${index}'>X</button>
           </li>`
           vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
-          const deleteButton = document.getElementById(`vocab-${index}`)
-          deleteButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            const index = vocabList.indexOf(vocab);
-            vocabList.splice(index, 1);
-            const domElement = document.getElementById(`list-item-${index}`)
-            domElement.remove();
-          })
+          setTimeout(() => {
+            const deleteButton = document.getElementById(`vocab-${index}`)
+            deleteButton.addEventListener('click', (event) => {
+              event.preventDefault();
+              const index = vocabList.indexOf(vocab);
+              vocabList.splice(index, 1);
+              chrome.storage.local.set({ vocabulary_list: vocabList})
+              const domElement = document.getElementById(`list-item-${index}`)
+              domElement.remove();
+            })
+          }, 0);
         })
         vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
         vocabListHtml.insertAdjacentHTML("afterbegin", `<h2>Your looked up vocabulary:</h2>`)

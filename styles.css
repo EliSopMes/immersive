@@ -56,12 +56,12 @@
   font-family: 'Poppins', sans-serif;
 }
 
-#choice-popup-styling {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 124px;
+#choice-popup-styling, #choice-popup-styling-add {
+  display: flex;
+  justify-content: space-between;
+  width: 100px;
   margin-top: 10px;
+  margin-left: 205px;
 
   img {
     height: 22px;
@@ -73,11 +73,10 @@
   img:hover {
     cursor: pointer;
   }
-
 }
 
 #choicePopup {
-  padding-bottom: 20px;
+  padding-bottom: 5px;
 
   button {
     background: transparent;

@@ -3,7 +3,9 @@ let defintion_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
 
-document.addEventListener('mouseup', function () {
+document.addEventListener('mouseup', function (event) {
+  const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
+  if (isInsidePopup) return;
   let selectedText = window.getSelection().toString().trim();
   if (selectedText && selectedText !== lastSelectedText && !document.getElementById("customPopup")) {
     lastSelectedText = selectedText;
@@ -66,7 +68,6 @@ function createPopup(selectedText) {
     document.getElementById("btn2").addEventListener("click", () => {
       chrome.storage.local.get("language_level" , (data) => {
         const level = data.language_level || 'A2';
-        console.log(level)
         simplify(selectedText, level);
         popup.remove();
       })
@@ -157,7 +158,6 @@ function simplify(selectedText, level) {
         <p>${simplified}</p>
         <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
           <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
           <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
           <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
         </div>
@@ -169,20 +169,21 @@ function simplify(selectedText, level) {
 
     setTimeout(() => {
       document.getElementById("btn-copy").addEventListener("click", () => {
-        navigator.clipboard.writeText(translation);
-      });
-      document.getElementById("btn-vocab").addEventListener("click", () => {
-        vocabulary_list.push([selectedText, translation]);
-        chrome.storage.local.set({ vocabulary_list });
+        navigator.clipboard.writeText(simplified);
       });
       document.getElementById("btn-translate").addEventListener("click", () => {
-        translate(simplified);
+        translate_from_simplified(simplified);
       });
-      document.getElementById("btn-audio").addEventListener("click", (event) => {
+      document.getElementById("choicePopup").addEventListener("mouseup", function () {
+        let selectedText = window.getSelection().toString().trim();
+        if (selectedText) {
+          translate_from_simplified(selectedText);
+        }
+      });
+      document.getElementById("btn-audio").addEventListener("click", () => {
         pronounce(simplified, 'de');
       });
       document.querySelector(".closePopup").addEventListener("click", () => {
-        console.log("popup reached")
         choicePopup.remove();
       });
     }, 100);
@@ -263,6 +264,49 @@ function translate(selectedText) {
     }, 100);
   });
 }
+
+function translate_from_simplified(selectedText) {
+  fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: selectedText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const translation = data.translated;
+    let oldPopup = document.getElementById("choicePopup");
+
+    // Add buttons
+    const additionalHTML = `
+      <div style="display: flex; justify-content: space-between;">
+        <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+      </div>
+      <hr>
+      <p>${translation}</p>
+      <div id="choice-popup-styling-add" style="display: flex; justify-content: space-between;">
+        <img id="btn-audio-add" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+        <img id="btn-copy-add" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+        <img id="btn-vocab-add" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+      </div>
+    `;
+    // Append choicePopup to body
+    oldPopup.insertAdjacentHTML('beforeend', additionalHTML)
+
+    setTimeout(() => {
+      document.getElementById("btn-copy-add").addEventListener("click", () => {
+        navigator.clipboard.writeText(translation);
+      });
+      document.getElementById("btn-vocab-add").addEventListener("click", () => {
+        vocabulary_list.push([selectedText, translation]);
+        chrome.storage.local.set({ vocabulary_list });
+      });
+      document.getElementById("btn-audio-add").addEventListener("click", (event) => {
+        pronounce(translation, 'en');
+      });
+    }, 100);
+  });
+}
+
 function pronounce(selectedText, language) {
   if (isSpeaking) {
     window.speechSynthesis.cancel(); // Stop speech if already speaking
