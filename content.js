@@ -64,8 +64,12 @@ function createPopup(selectedText) {
       popup.remove();
     });
     document.getElementById("btn2").addEventListener("click", () => {
-      simplify(selectedText);
-      popup.remove();
+      chrome.storage.local.get("language_level" , (data) => {
+        const level = data.language_level || 'A2';
+        console.log(level)
+        simplify(selectedText, level);
+        popup.remove();
+      })
     });
     document.getElementById("btn3").addEventListener("click", (event) => {
       if (event.target.innerHTML === 'pause') {
@@ -109,11 +113,11 @@ function createPopup(selectedText) {
   window.addEventListener("scroll", handleScroll);
 }
 
-function simplify(selectedText) {
+function simplify(selectedText, level) {
   fetch("https://immersive-server.netlify.app/.netlify/functions/simplify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: selectedText })
+    body: JSON.stringify({ text: selectedText, level: level })
   })
   .then(res => res.json())
   .then(data => {

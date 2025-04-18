@@ -8,10 +8,26 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.2/css/all.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">  </head>
   <body>
+    <div id="lng-level" style="display: flex; justify-content: space-between;">
+      <h2>your level:</h2>
+      <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
+        <option value="A1">A1</option>
+        <option value="A2">A2</option>
+        <option value="B1">B1</option>
+        <option value="B2">B2</option>
+        <option value="C1">C1</option>
+        <option value="C2">C2</option>
+      </select>
+      <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
+    </div>
+    <hr>
+    <br>
     <div id="pin-popup">
       <input type="text" id="inputText" placeholder="Enter word to be translated">
       <button id="translateBtn">Translate</button>
       <p id="output"></p>
+      <hr>
+      <br>
       <div id="vocab-div" style="display: none;">
         <button id="listBtn">View your vocabs</button>
         <pre id="vocabList">
@@ -25,7 +41,7 @@
     min-width: 200px;
   }
 
-  #pin-popup {
+  #pin-popup, #lng-level {
     button {
       background-color: black;
       color: white;

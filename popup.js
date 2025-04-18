@@ -23,6 +23,19 @@
       })
     });
 
+    const levelSet = document.getElementById('levels')
+    chrome.storage.local.get("language_level", (data) => {
+      const level = data.language_level || 'A2';
+      if (level) {
+        levelSet.value = level;
+      }
+    })
+
+    const levelBtn = document.getElementById('level-btn')
+    levelBtn.addEventListener("click", () => {
+      chrome.storage.local.set({ language_level: levelSet.value });
+    })
+
     const listBtn = document.getElementById('listBtn')
     listBtn.addEventListener("click", () => {
       chrome.storage.local.get("vocabulary_list", (data) => {
