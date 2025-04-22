@@ -38,7 +38,7 @@ function createPopup(selectedText) {
   // popup.style.height = "34px";
   popup.style.fontFamily = "'Poppins', sans-serif";
   popup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-  popup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+  popup.style.left = `${rect.right - 200 + window.scrollX}px`; // Adjust X position
   popup.style.background = "white";
   popup.style.border = "1px solid #D9D9D9";
   popup.style.borderRadius = "8px";
@@ -139,7 +139,7 @@ function simplify(selectedText, level) {
     choicePopup.style.width = "305px";
     choicePopup.style.fontFamily = "'Poppins', sans-serif";
     choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-    choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
     choicePopup.style.background = "white";
     choicePopup.style.border = "1px solid #D9D9D9";
     choicePopup.style.borderRadius = "8px";
@@ -155,8 +155,8 @@ function simplify(selectedText, level) {
           <button class="closePopup">X</button>
         </div>
         <hr>
-        <p>${simplified}</p>
-        <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
+        <p class="choice-text">${simplified}</p>
+        <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
           <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
           <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
           <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
@@ -215,7 +215,7 @@ function translate(selectedText) {
     choicePopup.style.width = "305px";
     choicePopup.style.fontFamily = "'Poppins', sans-serif";
     choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-    choicePopup.style.left = `${rect.right + window.scrollX}px`; // Adjust X position
+    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
     choicePopup.style.background = "white";
     choicePopup.style.border = "1px solid #D9D9D9";
     choicePopup.style.borderRadius = "8px";
@@ -231,8 +231,8 @@ function translate(selectedText) {
           <button class="closePopup">X</button>
         </div>
         <hr>
-        <p>${translation}</p>
-        <div id="choice-popup-styling" style="display: flex; justify-content: space-between;">
+        <p class="choice-text">${translation}</p>
+        <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
           <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
           <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
           <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
@@ -255,8 +255,8 @@ function translate(selectedText) {
       document.getElementById("btn-simple").addEventListener("click", () => {
         simplify(translation);
       });
-      document.getElementById("btn-audio").addEventListener("click", (event) => {
-        pronounce(translation, 'en');
+      document.getElementById("btn-audio").addEventListener("click", () => {
+        pronounce(selectedText, 'de');
       });
       document.querySelector(".closePopup").addEventListener("click", () => {
         choicePopup.remove();
@@ -282,8 +282,8 @@ function translate_from_simplified(selectedText) {
         <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
       </div>
       <hr>
-      <p>${translation}</p>
-      <div id="choice-popup-styling-add" style="display: flex; justify-content: space-between;">
+      <p class="choice-text">${translation}</p>
+      <div id="choice-popup-styling-add" class="three" style="display: flex; justify-content: space-between;">
         <img id="btn-audio-add" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
         <img id="btn-copy-add" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
         <img id="btn-vocab-add" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">

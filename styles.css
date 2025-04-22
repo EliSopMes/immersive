@@ -59,9 +59,7 @@
 #choice-popup-styling, #choice-popup-styling-add {
   display: flex;
   justify-content: space-between;
-  width: 100px;
   margin-top: 10px;
-  margin-left: 205px;
 
   img {
     height: 22px;
@@ -73,6 +71,20 @@
   img:hover {
     cursor: pointer;
   }
+}
+
+.choice-text {
+  margin-top: 10px;
+}
+
+.three {
+  margin-left: 205px;
+  width: 75px;
+}
+
+.four {
+  margin-left: 180px;
+  width: 100px;
 }
 
 #choicePopup {
