@@ -90,7 +90,7 @@
   width: 100px;
 }
 
-#toast {
+#toast, #toast-copy {
   visibility: hidden;
   min-width: 60px;
   background-color: black;
@@ -103,7 +103,7 @@
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 #choicePopup {
