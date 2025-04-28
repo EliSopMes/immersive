@@ -60,6 +60,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
+  align-items: end;
 
   img {
     height: 22px;
@@ -78,13 +79,31 @@
 }
 
 .three {
-  margin-left: 205px;
+  margin-left: auto;
+  margin-right: 0;
   width: 75px;
 }
 
 .four {
-  margin-left: 180px;
+  margin-left: auto;
+  margin-right: 0;
   width: 100px;
+}
+
+#toast {
+  visibility: hidden;
+  min-width: 60px;
+  background-color: black;
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  padding: 4px 8px;
+  position: fixed;
+  z-index: 9999;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
 }
 
 #choicePopup {

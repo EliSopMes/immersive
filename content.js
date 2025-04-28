@@ -9,11 +9,12 @@ document.addEventListener('mouseup', function (event) {
   let selectedText = window.getSelection().toString().trim();
   if (selectedText && selectedText !== lastSelectedText && !document.getElementById("customPopup")) {
     lastSelectedText = selectedText;
-    createPopup(lastSelectedText);
+    const number_of_highlighted_words = selectedText.split(/\s+/).length;
+    createPopup(lastSelectedText, number_of_highlighted_words);
   }
 });
 
-function createPopup(selectedText) {
+function createPopup(selectedText, number_of_highlighted_words) {
   // Check if popup already exists, to prevent duplicates
   let existingPopup = document.getElementById("customPopup");
   if (existingPopup) {
@@ -62,13 +63,14 @@ function createPopup(selectedText) {
   // ✅ Ensure Event Listeners Work
   setTimeout(() => {
     document.getElementById("btn1").addEventListener("click", () => {
-      translate(selectedText);
+      translateGPT(selectedText, number_of_highlighted_words);
+      // translate(selectedText, number_of_highlighted_words);
       popup.remove();
     });
     document.getElementById("btn2").addEventListener("click", () => {
       chrome.storage.local.get("language_level" , (data) => {
         const level = data.language_level || 'A2';
-        simplify(selectedText, level);
+        simplify(selectedText, level, number_of_highlighted_words);
         popup.remove();
       })
     });
@@ -114,8 +116,9 @@ function createPopup(selectedText) {
   window.addEventListener("scroll", handleScroll);
 }
 
-function simplify(selectedText, level) {
-  fetch("https://immersive-server.netlify.app/.netlify/functions/simplify", {
+function simplify(selectedText, level, number_of_highlighted_words) {
+  const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify'
+  fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: selectedText, level: level })
@@ -151,7 +154,7 @@ function simplify(selectedText, level) {
     choicePopup.innerHTML = `
       <div id="choicePopup">
         <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+          <p style="color: #555555; margin: 4px 0px 8px 0px">${taskToDo === "define" ? "Defintion" : "Simplified content"}</p>
           <button class="closePopup">X</button>
         </div>
         <hr>
@@ -159,6 +162,7 @@ function simplify(selectedText, level) {
         <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
           <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
           <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+
           <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
         </div>
       </div>
@@ -172,11 +176,13 @@ function simplify(selectedText, level) {
         navigator.clipboard.writeText(simplified);
       });
       document.getElementById("btn-translate").addEventListener("click", () => {
-        translate_from_simplified(simplified);
+        translate_from_simplified(selectedText);
       });
-      document.getElementById("choicePopup").addEventListener("mouseup", function () {
+      document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
+        const isInsidePopup = event.target.closest("#choice-popup-styling");
+        if (isInsidePopup) return;
         let selectedText = window.getSelection().toString().trim();
-        if (selectedText) {
+        if (selectedText && selectedText !== "") {
           translate_from_simplified(selectedText);
         }
       });
@@ -190,7 +196,7 @@ function simplify(selectedText, level) {
   });
 }
 
-function translate(selectedText) {
+function translate(selectedText, number_of_highlighted_words) {
   fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -234,8 +240,16 @@ function translate(selectedText) {
         <p class="choice-text">${translation}</p>
         <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
           <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+          <div style="${number_of_highlighted_words > 3 ? "display: none" : ""}">
+            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <div id="toast">
+              Saved!
+            </div>
+          </div>
           <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+          <div id="toast-copy">
+            Saved to clipboard!
+          </div>
           <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
         </div>
       </div>
@@ -247,13 +261,112 @@ function translate(selectedText) {
     setTimeout(() => {
       document.getElementById("btn-copy").addEventListener("click", () => {
         navigator.clipboard.writeText(translation);
+        const toast = document.getElementById('toast-copy');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 1000);
       });
       document.getElementById("btn-vocab").addEventListener("click", () => {
         vocabulary_list.push([selectedText, translation]);
         chrome.storage.local.set({ vocabulary_list });
+        const toast = document.getElementById('toast');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 1000);
       });
       document.getElementById("btn-simple").addEventListener("click", () => {
-        simplify(translation);
+        simplify(translation, level, number_of_highlighted_words);
+      });
+      document.getElementById("btn-audio").addEventListener("click", () => {
+        pronounce(selectedText, 'de');
+      });
+      document.querySelector(".closePopup").addEventListener("click", () => {
+        choicePopup.remove();
+      });
+    }, 100);
+  });
+}
+
+function translateGPT(selectedText, number_of_highlighted_words) {
+  fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: selectedText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const translation = JSON.parse(data.translated);
+
+    let oldPopup = document.getElementById("choicePopup");
+    if (oldPopup) oldPopup.remove();
+
+    let choicePopup = document.createElement("div");
+    choicePopup.id = "choicePopup";
+
+    // Get selection coordinates
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    choicePopup.style.position = "absolute";
+    choicePopup.style.width = "305px";
+    choicePopup.style.fontFamily = "'Poppins', sans-serif";
+    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+    choicePopup.style.background = "white";
+    choicePopup.style.border = "1px solid #D9D9D9";
+    choicePopup.style.borderRadius = "8px";
+    choicePopup.style.padding = "8px 12px";
+    choicePopup.style.zIndex = "9998";
+    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+
+    // Add buttons
+    choicePopup.innerHTML = `
+      <div id="choicePopup">
+        <div style="display: flex; justify-content: space-between;">
+          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+          <button class="closePopup">X</button>
+        </div>
+        <hr>
+        <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+          <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type})</p>
+        </div>
+        <p class="choice-text">${translation.translation}</p>
+        <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
+          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+          <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <div id="toast">
+              Saved!
+            </div>
+          </div>
+          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
+        </div>
+      </div>
+    `;
+
+    // Append choicePopup to body
+    document.body.appendChild(choicePopup);
+
+    setTimeout(() => {
+      document.getElementById("btn-copy").addEventListener("click", () => {
+        navigator.clipboard.writeText(translation.translation);
+      });
+      document.getElementById("btn-vocab").addEventListener("click", () => {
+        const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
+        vocabulary_list.push([germanWord, translation.translation]);
+        chrome.storage.local.set({ vocabulary_list });
+        const toast = document.getElementById('toast');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 1000);
+      });
+      document.getElementById("btn-simple").addEventListener("click", () => {
+        simplify(translation.translation, level, number_of_highlighted_words);
       });
       document.getElementById("btn-audio").addEventListener("click", () => {
         pronounce(selectedText, 'de');
@@ -283,7 +396,7 @@ function translate_from_simplified(selectedText) {
       </div>
       <hr>
       <p class="choice-text">${translation}</p>
-      <div id="choice-popup-styling-add" class="three" style="display: flex; justify-content: space-between;">
+      <div id="choice-popup-styling-add" class="three">
         <img id="btn-audio-add" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
         <img id="btn-copy-add" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
         <img id="btn-vocab-add" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">

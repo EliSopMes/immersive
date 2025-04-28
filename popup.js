@@ -34,6 +34,11 @@
     const levelBtn = document.getElementById('level-btn')
     levelBtn.addEventListener("click", () => {
       chrome.storage.local.set({ language_level: levelSet.value });
+      const toast = document.getElementById('toast-icon');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 1000);
     })
 
     const listBtn = document.getElementById('listBtn')
