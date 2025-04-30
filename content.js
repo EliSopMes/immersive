@@ -3,6 +3,21 @@ let defintion_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
 
+window.addEventListener("message", (event) => {
+  // SECURITY: verify the origin
+  if (event.origin !== "http://127.0.0.1:5500") return;
+  // if (event.origin !== "https://immersive-server.netlify.app/") return;
+
+  if (event.data.type === "SUPABASE_TOKEN") {
+    const token = event.data.token;
+
+    // Store in chrome.storage
+    chrome.storage.local.set({ supabaseToken: token }, () => {
+      console.log("Supabase token stored in extension storage.");
+    });
+  }
+});
+
 document.addEventListener('mouseup', function (event) {
   const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
   if (isInsidePopup) return;
@@ -117,90 +132,100 @@ function createPopup(selectedText, number_of_highlighted_words) {
 }
 
 function simplify(selectedText, level, number_of_highlighted_words) {
-  const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify'
-  fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: selectedText, level: level })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const simplified = data.simplified;
+  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
+    }
 
-    let oldPopup = document.getElementById("choicePopup");
-    if (oldPopup) oldPopup.remove();
+    const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify'
+    fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+      body: JSON.stringify({ text: selectedText, level: level })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const simplified = data.simplified;
 
-    let choicePopup = document.createElement("div");
-    choicePopup.id = "choicePopup";
+      let oldPopup = document.getElementById("choicePopup");
+      if (oldPopup) oldPopup.remove();
 
-    // Get selection coordinates
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+      let choicePopup = document.createElement("div");
+      choicePopup.id = "choicePopup";
 
-    choicePopup.style.position = "absolute";
-    choicePopup.style.width = "305px";
-    choicePopup.style.fontFamily = "'Poppins', sans-serif";
-    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-    choicePopup.style.background = "white";
-    choicePopup.style.border = "1px solid #D9D9D9";
-    choicePopup.style.borderRadius = "8px";
-    choicePopup.style.padding = "8px 12px";
-    choicePopup.style.zIndex = "9999";
-    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+      // Get selection coordinates
+      const selection = window.getSelection();
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
 
-    // Add buttons
-    choicePopup.innerHTML = `
-      <div id="choicePopup">
-        <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">${taskToDo === "define" ? "Defintion" : "Simplified content"}</p>
-          <button class="closePopup">X</button>
-        </div>
-        <hr>
-        <p class="choice-text">${simplified}</p>
-        <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-          <div id="toast-copy">
-            Saved to clipboard!
+      choicePopup.style.position = "absolute";
+      choicePopup.style.width = "305px";
+      choicePopup.style.fontFamily = "'Poppins', sans-serif";
+      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+      choicePopup.style.background = "white";
+      choicePopup.style.border = "1px solid #D9D9D9";
+      choicePopup.style.borderRadius = "8px";
+      choicePopup.style.padding = "8px 12px";
+      choicePopup.style.zIndex = "9999";
+      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+
+      // Add buttons
+      choicePopup.innerHTML = `
+        <div id="choicePopup">
+          <div style="display: flex; justify-content: space-between;">
+            <p style="color: #555555; margin: 4px 0px 8px 0px">${taskToDo === "define" ? "Defintion" : "Simplified content"}</p>
+            <button class="closePopup">X</button>
           </div>
-          <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+          <hr>
+          <p class="choice-text">${simplified}</p>
+          <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
+            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy">
+              Saved to clipboard!
+            </div>
+            <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+          </div>
         </div>
-      </div>
-    `;
+      `;
 
-    // Append choicePopup to body
-    document.body.appendChild(choicePopup);
+      // Append choicePopup to body
+      document.body.appendChild(choicePopup);
 
-    setTimeout(() => {
-      document.getElementById("btn-copy").addEventListener("click", () => {
-        navigator.clipboard.writeText(simplified);
-        const toast = document.getElementById('toast-copy');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-translate").addEventListener("click", () => {
-        translate_from_simplified(selectedText, number_of_highlighted_words);
-      });
-      document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
-        const isInsidePopup = event.target.closest("#choice-text");
-        if (isInsidePopup) return;
-        let selectedText = window.getSelection().toString().trim();
-        let number_highlighted_words = selectedText.split(/\s+/).length;
-        if (selectedText && selectedText !== "") {
-          translate_from_simplified(selectedText, number_highlighted_words);
-        }
-      });
-      document.getElementById("btn-audio").addEventListener("click", () => {
-        pronounce(simplified, 'de');
-      });
-      document.querySelector(".closePopup").addEventListener("click", () => {
-        choicePopup.remove();
-      });
-    }, 100);
+      setTimeout(() => {
+        document.getElementById("btn-copy").addEventListener("click", () => {
+          navigator.clipboard.writeText(simplified);
+          const toast = document.getElementById('toast-copy');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-translate").addEventListener("click", () => {
+          translate_from_simplified(selectedText, number_of_highlighted_words);
+        });
+        document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
+          const isInsidePopup = event.target.closest("#choice-text");
+          if (isInsidePopup) return;
+          let selectedText = window.getSelection().toString().trim();
+          let number_highlighted_words = selectedText.split(/\s+/).length;
+          if (selectedText && selectedText !== "") {
+            translate_from_simplified(selectedText, number_highlighted_words);
+          }
+        });
+        document.getElementById("btn-audio").addEventListener("click", () => {
+          pronounce(simplified, 'de');
+        });
+        document.querySelector(".closePopup").addEventListener("click", () => {
+          choicePopup.remove();
+        });
+      }, 100);
+    })
+    .catch((err) => {
+      console.error("Fetch failed:", err);
+    });
   });
 }
 
