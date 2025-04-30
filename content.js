@@ -5,8 +5,8 @@ let isSpeaking = false;
 
 window.addEventListener("message", (event) => {
   // SECURITY: verify the origin
-  if (event.origin !== "http://127.0.0.1:5500") return;
-  // if (event.origin !== "https://immersive-server.netlify.app/") return;
+  // if (event.origin !== "http://127.0.0.1:5500") return;
+  if (event.origin !== "https://immersive-server.netlify.app") return;
 
   if (event.data.type === "SUPABASE_TOKEN") {
     const token = event.data.token;
@@ -137,7 +137,6 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       console.log('no token')
       return;
     }
-
     const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify'
     fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
       method: "POST",
@@ -230,269 +229,294 @@ function simplify(selectedText, level, number_of_highlighted_words) {
 }
 
 function translate(selectedText, number_of_highlighted_words) {
-  fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: selectedText })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const translation = data.translated;
+  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
+    }
+    fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+      body: JSON.stringify({ text: selectedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const translation = data.translated;
 
-    let oldPopup = document.getElementById("choicePopup");
-    if (oldPopup) oldPopup.remove();
+      let oldPopup = document.getElementById("choicePopup");
+      if (oldPopup) oldPopup.remove();
 
-    let choicePopup = document.createElement("div");
-    choicePopup.id = "choicePopup";
+      let choicePopup = document.createElement("div");
+      choicePopup.id = "choicePopup";
 
-    // Get selection coordinates
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+      // Get selection coordinates
+      const selection = window.getSelection();
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
 
-    choicePopup.style.position = "absolute";
-    choicePopup.style.width = "305px";
-    choicePopup.style.fontFamily = "'Poppins', sans-serif";
-    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-    choicePopup.style.background = "white";
-    choicePopup.style.border = "1px solid #D9D9D9";
-    choicePopup.style.borderRadius = "8px";
-    choicePopup.style.padding = "8px 12px";
-    choicePopup.style.zIndex = "9999";
-    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+      choicePopup.style.position = "absolute";
+      choicePopup.style.width = "305px";
+      choicePopup.style.fontFamily = "'Poppins', sans-serif";
+      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+      choicePopup.style.background = "white";
+      choicePopup.style.border = "1px solid #D9D9D9";
+      choicePopup.style.borderRadius = "8px";
+      choicePopup.style.padding = "8px 12px";
+      choicePopup.style.zIndex = "9999";
+      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
-    // Add buttons
-    choicePopup.innerHTML = `
-      <div id="choicePopup">
-        <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-          <button class="closePopup">X</button>
-        </div>
-        <hr>
-        <p class="choice-text">${translation}</p>
-        <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <div style="${number_of_highlighted_words > 3 ? "display: none" : ""}">
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-            <div id="toast">
-              Saved!
+      // Add buttons
+      choicePopup.innerHTML = `
+        <div id="choicePopup">
+          <div style="display: flex; justify-content: space-between;">
+            <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+            <button class="closePopup">X</button>
+          </div>
+          <hr>
+          <p class="choice-text">${translation}</p>
+          <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
+            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <div style="${number_of_highlighted_words > 3 ? "display: none" : ""}">
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
+              </div>
             </div>
+            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy">
+              Saved to clipboard!
+            </div>
+            <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
           </div>
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-          <div id="toast-copy">
-            Saved to clipboard!
-          </div>
-          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
         </div>
-      </div>
-    `;
+      `;
 
-    // Append choicePopup to body
-    document.body.appendChild(choicePopup);
+      // Append choicePopup to body
+      document.body.appendChild(choicePopup);
 
-    setTimeout(() => {
-      document.getElementById("btn-copy").addEventListener("click", () => {
-        navigator.clipboard.writeText(translation);
-        const toast = document.getElementById('toast-copy');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-vocab").addEventListener("click", () => {
-        vocabulary_list.push([selectedText, translation]);
-        chrome.storage.local.set({ vocabulary_list });
-        const toast = document.getElementById('toast');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-simple").addEventListener("click", () => {
-        chrome.storage.local.get("language_level" , (data) => {
-          const level = data.language_level || 'A2';
-          simplify(selectedText, level, number_of_highlighted_words);
-        })
-      });
-      document.getElementById("btn-audio").addEventListener("click", () => {
-        pronounce(selectedText, 'de');
-      });
-      document.querySelector(".closePopup").addEventListener("click", () => {
-        choicePopup.remove();
-      });
-    }, 100);
+      setTimeout(() => {
+        document.getElementById("btn-copy").addEventListener("click", () => {
+          navigator.clipboard.writeText(translation);
+          const toast = document.getElementById('toast-copy');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-vocab").addEventListener("click", () => {
+          vocabulary_list.push([selectedText, translation]);
+          chrome.storage.local.set({ vocabulary_list });
+          const toast = document.getElementById('toast');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-simple").addEventListener("click", () => {
+          chrome.storage.local.get("language_level" , (data) => {
+            const level = data.language_level || 'A2';
+            simplify(selectedText, level, number_of_highlighted_words);
+          })
+        });
+        document.getElementById("btn-audio").addEventListener("click", () => {
+          pronounce(selectedText, 'de');
+        });
+        document.querySelector(".closePopup").addEventListener("click", () => {
+          choicePopup.remove();
+        });
+      }, 100);
+    })
+    .catch((err) => {
+      console.error("Fetch failed:", err);
+    });
   });
 }
 
 function translateGPT(selectedText, number_of_highlighted_words) {
-  fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: selectedText })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const translation = JSON.parse(data.translated);
+  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
+    }
+    fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+      body: JSON.stringify({ text: selectedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const translation = JSON.parse(data.translated);
 
-    let oldPopup = document.getElementById("choicePopup");
-    if (oldPopup) oldPopup.remove();
+      let oldPopup = document.getElementById("choicePopup");
+      if (oldPopup) oldPopup.remove();
 
-    let choicePopup = document.createElement("div");
-    choicePopup.id = "choicePopup";
+      let choicePopup = document.createElement("div");
+      choicePopup.id = "choicePopup";
 
-    // Get selection coordinates
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+      // Get selection coordinates
+      const selection = window.getSelection();
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
 
-    choicePopup.style.position = "absolute";
-    choicePopup.style.width = "305px";
-    choicePopup.style.fontFamily = "'Poppins', sans-serif";
-    choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-    choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-    choicePopup.style.background = "white";
-    choicePopup.style.border = "1px solid #D9D9D9";
-    choicePopup.style.borderRadius = "8px";
-    choicePopup.style.padding = "8px 12px";
-    choicePopup.style.zIndex = "9998";
-    choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+      choicePopup.style.position = "absolute";
+      choicePopup.style.width = "305px";
+      choicePopup.style.fontFamily = "'Poppins', sans-serif";
+      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+      choicePopup.style.background = "white";
+      choicePopup.style.border = "1px solid #D9D9D9";
+      choicePopup.style.borderRadius = "8px";
+      choicePopup.style.padding = "8px 12px";
+      choicePopup.style.zIndex = "9998";
+      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
-    // Add buttons
-    choicePopup.innerHTML = `
-      <div id="choicePopup">
-        <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-          <button class="closePopup">X</button>
-        </div>
-        <hr>
-        <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-          <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type}) <span style="color: grey;">${translation.infinitive ? "--> Infinitive: " + translation.infinitive : ""}</span></p>
-        </div>
-        <p class="choice-text">${translation.translation}</p>
-        <div id="choice-popup-styling" class="three" style="${number_of_highlighted_words === 1 ? "width: 100px" : ""}">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-            <div id="toast">
-              Saved!
+      // Add buttons
+      choicePopup.innerHTML = `
+        <div id="choicePopup">
+          <div style="display: flex; justify-content: space-between;">
+            <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+            <button class="closePopup">X</button>
+          </div>
+          <hr>
+          <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+            <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type}) <span style="color: grey;">${translation.infinitive ? "--> Infinitive: " + translation.infinitive : ""}</span></p>
+          </div>
+          <p class="choice-text">${translation.translation}</p>
+          <div id="choice-popup-styling" class="three" style="${number_of_highlighted_words === 1 ? "width: 100px" : ""}">
+            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
+              </div>
             </div>
+            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy">
+              Saved to clipboard!
+            </div>
+            <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
           </div>
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-          <div id="toast-copy">
-            Saved to clipboard!
-          </div>
-          <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
         </div>
-      </div>
-    `;
+      `;
 
-    // Append choicePopup to body
-    document.body.appendChild(choicePopup);
+      // Append choicePopup to body
+      document.body.appendChild(choicePopup);
 
-    setTimeout(() => {
-      document.getElementById("btn-copy").addEventListener("click", () => {
-        navigator.clipboard.writeText(translation.translation);
-        const toast = document.getElementById('toast-copy');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-vocab").addEventListener("click", () => {
-        const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
-        vocabulary_list.push([germanWord, translation.translation]);
-        chrome.storage.local.set({ vocabulary_list });
-        const toast = document.getElementById('toast');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-simple").addEventListener("click", () => {
-        chrome.storage.local.get("language_level" , (data) => {
-          const level = data.language_level || 'A2';
-          simplify(selectedText, level, number_of_highlighted_words);
-        })
-      });
-      document.getElementById("btn-audio").addEventListener("click", () => {
-        pronounce(selectedText, 'de');
-      });
-      document.querySelector(".closePopup").addEventListener("click", () => {
-        choicePopup.remove();
-      });
-    }, 100);
+      setTimeout(() => {
+        document.getElementById("btn-copy").addEventListener("click", () => {
+          navigator.clipboard.writeText(translation.translation);
+          const toast = document.getElementById('toast-copy');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-vocab").addEventListener("click", () => {
+          const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
+          save_vocabulary(germanWord, translation.translation)
+          const toast = document.getElementById('toast');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-simple").addEventListener("click", () => {
+          chrome.storage.local.get("language_level" , (data) => {
+            const level = data.language_level || 'A2';
+            simplify(selectedText, level, number_of_highlighted_words);
+          })
+        });
+        document.getElementById("btn-audio").addEventListener("click", () => {
+          pronounce(selectedText, 'de');
+        });
+        document.querySelector(".closePopup").addEventListener("click", () => {
+          choicePopup.remove();
+        });
+      }, 100);
+    })
+    .catch((err) => {
+      console.error("Fetch failed:", err);
+    });
   });
 }
 
 function translate_from_simplified(selectedText, number_of_highlighted_words) {
-  fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: selectedText })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const translation = JSON.parse(data.translated);
-    selectedText.split(/\s+/).length;
-    let oldPopup = document.getElementById("choicePopup");
-    const number_of_words = selectedText.split(/\s+/).length
-    let existingPopup = document.getElementById("translate-from-simplified");
-    if (existingPopup) {
-      existingPopup.remove();
+  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
     }
-    // Add buttons
-    const additionalHTML = `
-      <div id="translate-from-simplified">
-        <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-        </div>
-        <hr>
-        <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-          <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type}) <span style="color: grey;">${translation.infinitive ? "--> Infinitive: " + translation.infinitive : ""}</span></p>
-        </div>
-        <p class="choice-text">${translation.translation}</p>
-        <div id="choice-popup-styling" class="three" style="${number_of_words > 1 ? "width:50px" : ""}">
-          <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-            <div id="toast">
-              Saved!
+    fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+      body: JSON.stringify({ text: selectedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const translation = JSON.parse(data.translated);
+      selectedText.split(/\s+/).length;
+      let oldPopup = document.getElementById("choicePopup");
+      const number_of_words = selectedText.split(/\s+/).length
+      let existingPopup = document.getElementById("translate-from-simplified");
+      if (existingPopup) {
+        existingPopup.remove();
+      }
+      // Add buttons
+      const additionalHTML = `
+        <div id="translate-from-simplified">
+          <div style="display: flex; justify-content: space-between;">
+            <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+          </div>
+          <hr>
+          <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+            <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type}) <span style="color: grey;">${translation.infinitive ? "--> Infinitive: " + translation.infinitive : ""}</span></p>
+          </div>
+          <p class="choice-text">${translation.translation}</p>
+          <div id="choice-popup-styling" class="three" style="${number_of_words > 1 ? "width:50px" : ""}">
+            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
+              </div>
+            </div>
+            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy">
+              Saved to clipboard!
             </div>
           </div>
-          <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-          <div id="toast-copy">
-            Saved to clipboard!
-          </div>
         </div>
-      </div>
-    `;
-    // Append choicePopup to body
-    oldPopup.insertAdjacentHTML('beforeend', additionalHTML)
+      `;
+      // Append choicePopup to body
+      oldPopup.insertAdjacentHTML('beforeend', additionalHTML)
 
-    setTimeout(() => {
-      document.getElementById("btn-copy").addEventListener("click", () => {
-        navigator.clipboard.writeText(translation);
-        const toast = document.getElementById('toast-copy');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-vocab").addEventListener("click", () => {
-        const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
-        vocabulary_list.push([germanWord, translation.translation]);
-        chrome.storage.local.set({ vocabulary_list });
-        const toast = document.getElementById('toast');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
-      });
-      document.getElementById("btn-audio").addEventListener("click", (event) => {
-        pronounce(translation, 'en');
-      });
-    }, 100);
+      setTimeout(() => {
+        document.getElementById("btn-copy").addEventListener("click", () => {
+          navigator.clipboard.writeText(translation);
+          const toast = document.getElementById('toast-copy');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-vocab").addEventListener("click", () => {
+          const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
+          save_vocabulary(germanWord, translation.translation)
+          const toast = document.getElementById('toast');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
+        document.getElementById("btn-audio").addEventListener("click", (event) => {
+          pronounce(translation, 'en');
+        });
+      }, 100);
+    })
+    .catch((err) => {
+      console.error("Fetch failed:", err);
+    });
   });
 }
 
@@ -509,6 +533,29 @@ function pronounce(selectedText, language) {
     window.speechSynthesis.speak(utterance);
     isSpeaking = true;
   }
+}
+
+function save_vocabulary(original_word, translated_word) {
+  vocabulary_list.push([original_word, translated_word]);
+  chrome.storage.local.set({ vocabulary_list });
+  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
+    }
+    fetch(`https://immersive-server.netlify.app/.netlify/functions/save_vocab`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+      body: JSON.stringify({ original_word, translated_word })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log(data)
+    })
+    .catch((err) => {
+      console.error("Fetch failed:", err);
+    });
+  });
 }
 
 const style = document.createElement('style')
