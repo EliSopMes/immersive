@@ -5,8 +5,8 @@ let isSpeaking = false;
 
 window.addEventListener("message", (event) => {
   // SECURITY: verify the origin
-  if (event.origin !== "http://127.0.0.1:5500") return;
-  // if (event.origin !== "https://immersive-server.netlify.app") return;
+  // if (event.origin !== "http://127.0.0.1:5500") return;
+  if (event.origin !== "https://immersive-server.netlify.app") return;
 
   if (event.data.type === "SUPABASE_TOKEN") {
     const token = event.data.token;
