@@ -5,18 +5,44 @@ let isSpeaking = false;
 
 window.addEventListener("message", (event) => {
   // SECURITY: verify the origin
-  // if (event.origin !== "http://127.0.0.1:5500") return;
-  if (event.origin !== "https://immersive-server.netlify.app") return;
+  if (event.origin !== "http://127.0.0.1:5500") return;
+  // if (event.origin !== "https://immersive-server.netlify.app") return;
 
   if (event.data.type === "SUPABASE_TOKEN") {
     const token = event.data.token;
-
-    // Store in chrome.storage
-    chrome.storage.local.set({ supabaseToken: token }, () => {
-      console.log("Supabase token stored in extension storage.");
+    console.log(token);
+    chrome.storage.local.set({
+      supabaseToken: token,
+    });
+  }
+  if (event.data.type === "REFRESH_TOKEN") {
+    const refreshToken = event.data.refresh_token
+    console.log(refreshToken)
+    chrome.storage.local.set({
+      refreshToken: refreshToken,
     });
   }
 });
+
+async function getNewAccessToken() {
+  const { supabaseRefreshToken } = await chrome.storage.local.get("refreshToken");
+  if (!supabaseRefreshToken) throw new Error("No refresh token available.");
+
+  const supabase = createClient("https://gbxmuqfqwiehvsfwpouw.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdieG11cWZxd2llaHZzZndwb3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTI3NTIsImV4cCI6MjA1OTkyODc1Mn0.J_aP5NqxbosSYiWpSujYt3tKskCTKJpqpvju_QZ9oQU");
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token: supabaseRefreshToken });
+
+  if (error) throw new Error("Failed to refresh session: " + error.message);
+
+  const newAccessToken = data.session.access_token;
+  const newRefreshToken = data.session.refresh_token;
+
+  await chrome.storage.local.set({
+    supabaseToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  });
+
+  return newAccessToken;
+}
 
 document.addEventListener('mouseup', function (event) {
   const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
@@ -131,21 +157,48 @@ function createPopup(selectedText, number_of_highlighted_words) {
   window.addEventListener("scroll", handleScroll);
 }
 
-function simplify(selectedText, level, number_of_highlighted_words) {
-  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+function auth_refresh(url, body) {
+  chrome.storage.local.get("supabaseToken" , async ({ supabaseToken }) => {
     if (!supabaseToken) {
       console.log('no token')
       return;
     }
-    const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify'
-    fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-      body: JSON.stringify({ text: selectedText, level: level })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const simplified = data.simplified;
+    const body = { text: selectedText, level }
+    const makeRequest = async (token) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+        body: JSON.stringify(body)
+      });
+      if (res.status === 401) throw new Error("Unauthorized");
+
+      return res.json();
+    };
+  });
+}
+
+function simplify(selectedText, level, number_of_highlighted_words) {
+  chrome.storage.local.get("supabaseToken" , async ({ supabaseToken }) => {
+    if (!supabaseToken) {
+      console.log('no token')
+      return;
+    }
+
+    const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify';
+    const makeRequest = async (token) => {
+      const res = await fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+        body: JSON.stringify({ text: selectedText, level })
+      });
+      if (res.status === 401) throw new Error("Unauthorized");
+
+      return res.json();
+    };
+
+    try {
+      const data = await makeRequest(supabaseToken);
+      const simplified = taskToDo === "define" ? JSON.parse(data.simplified) : data.simplified;
 
       let oldPopup = document.getElementById("choicePopup");
       if (oldPopup) oldPopup.remove();
@@ -169,12 +222,34 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       choicePopup.style.padding = "8px 12px";
       choicePopup.style.zIndex = "9999";
       choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-
-      // Add buttons
-      choicePopup.innerHTML = `
-        <div id="choicePopup">
+      const synonyms = simplified.synonyms ? `<strong><p>Synonyme</p></strong><ul style="list-style-type:disc;"> ${simplified.synonyms.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
+      const examples = simplified.examples ? `<strong><p>Beispiele</p></strong><ul style="list-style-type:disc;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
+      innerDefine =  `<div id="choicePopup">
           <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">${taskToDo === "define" ? "Defintion" : "Simplified content"}</p>
+            <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+            <button class="closePopup">X</button>
+          </div>
+          <hr>
+          <p class="choice-text">${simplified.article ? simplified.article : ""} <strong>${selectedText}</strong> (${simplified.word_type})</p>
+          <p class="choice-text">${simplified.plural ? "Plural: " + simplified.plural : ""}</p>
+          <strong><p>Bedeutung</p></strong>
+          <p class="choice-text">${simplified.meaning}</p>
+          ${synonyms ? synonyms : ""}
+          <br>
+          ${examples ? examples : ""}
+          <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
+            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy">
+              Saved to clipboard!
+            </div>
+            <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+          </div>
+        </div>
+      `;
+      innerSimplify = `<div id="choicePopup">
+          <div style="display: flex; justify-content: space-between;">
+            <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
             <button class="closePopup">X</button>
           </div>
           <hr>
@@ -189,6 +264,12 @@ function simplify(selectedText, level, number_of_highlighted_words) {
           </div>
         </div>
       `;
+      // Add buttons
+      if (taskToDo === "define") {
+        choicePopup.innerHTML = innerDefine
+      } else {
+        choicePopup.innerHTML = innerSimplify
+      }
 
       // Append choicePopup to body
       document.body.appendChild(choicePopup);
@@ -221,10 +302,19 @@ function simplify(selectedText, level, number_of_highlighted_words) {
           choicePopup.remove();
         });
       }, 100);
-    })
-    .catch((err) => {
-      console.error("Fetch failed:", err);
-    });
+    } catch (err) {
+      if (err.message === "Unauthorized") {
+        try {
+          const newToken = await getNewAccessToken();
+          const data = await makeRequest(newToken);
+
+        } catch (refreshErr) {
+          console.error("Token refresh failed:", refreshErr);
+        }
+      } else {
+        console.error("Fetch failed:", err);
+      }
+    }
   });
 }
 

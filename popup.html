@@ -7,49 +7,87 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">  </head>
   <body>
-    <div id="lng-level" style="display: flex; justify-content: space-between;">
-      <h2>your level:</h2>
-      <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
-        <option value="A1">A1</option>
-        <option value="A2">A2</option>
-        <option value="B1">B1</option>
-        <option value="B2">B2</option>
-        <option value="C1">C1</option>
-        <option value="C2">C2</option>
-      </select>
-      <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
-      <div id="toast-icon" style="
-        visibility: hidden;
-        min-width: 60px;
-        background-color: black;
-        color: white;
-        text-align: center;
-        border-radius: 8px;
-        padding: 4px 8px;
-        position: fixed;
-        z-index: 9999;
-        bottom: 85%;
-        left: 80%;
-        transform: translateX(-50%);
-        font-size: 14px;
-      ">
-        Saved!
-      </div>
-    </div>
+    <h3>Immersive</h3>
     <hr>
     <br>
-    <div id="pin-popup">
+    <div class="accordion">
+      <div class="item">
+        <div class="title">Language Level Setting</div>
+        <div id="lng-level" class="content" style="display: flex; justify-content: space-between;">
+          <p>my level:</p>
+          <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
+            <option value="A1">A1 (Beginner)</option>
+            <option value="A2">A2 (Elementary)</option>
+            <option value="B1">B1 (Intermediate)</option>
+            <option value="B2">B2 (Upper Intermediate)</option>
+            <option value="C1">C1 (Advanced)</option>
+            <option value="C2">C2 (Mastery)</option>
+          </select>
+          <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
+          <div id="toast-icon" style="
+            visibility: hidden;
+            min-width: 60px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 4px 8px;
+            position: fixed;
+            z-index: 9999;
+            bottom: 85%;
+            left: 80%;
+            transform: translateX(-50%);
+            font-size: 14px;
+          ">
+            Saved!
+          </div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="title">My Saved words</div>
+        <div id="vocab-div" class="content">
+          <div id="vocabList"></div>
+        </div>
+      </div>
+      <div class="item">
+        <div class="title">My practice</div>
+        <div class="content">Launching soon ...</div>
+      </div>
+      <div class="item">
+        <div class="title">Leave your feedback</div>
+        <div class="content" id="pin-popup">
+          <textarea name="feedback" rows="5" id="inputText" placeholder="What would you like to tell us?" style="width: 250px;"></textarea>
+          <br>
+          <button id="feedbackBtn" style="margin-top: 5px; margin-left: 200px;">Send</button>
+          <div id="toast-feedback" style="
+            visibility: hidden;
+            min-width: 60px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 4px 8px;
+            position: fixed;
+            z-index: 9999;
+            bottom: 20%;
+            left: 80%;
+            transform: translateX(-50%);
+            font-size: 14px;
+          ">
+            Sent!
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- <div id="pin-popup">
       <input type="text" id="inputText" placeholder="Enter word to be translated">
       <button id="translateBtn">Translate</button>
       <p id="output"></p>
       <hr>
       <br>
-      <div id="vocab-div" style="display: none;">
-        <button id="listBtn">View your vocabs</button>
-        <pre id="vocabList">
-        </pre>
-      </div>
-    </div>
+    </div> -->
   </body>
 </html>
 <style>
@@ -74,4 +112,32 @@
       width: 180px;
     }
   }
+
+  .accordion .item {
+    border: 1px solid #ccc;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .accordion .title {
+    padding: 12px;
+    background: #f5f5f5;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .accordion .content {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 12px;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+
+  .accordion .item.open .content {
+    max-height: 500px; /* large enough to accommodate content */
+    padding: 12px;
+  }
+
 </style>
