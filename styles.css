@@ -90,6 +90,17 @@
   width: 100px;
 }
 
+.vocab-card {
+  width: 200px;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 8px;
+
+  img {
+    height: 22px;
+  }
+}
+
 #toast, #toast-copy {
   visibility: hidden;
   min-width: 60px;

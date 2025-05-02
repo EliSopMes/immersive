@@ -1,27 +1,40 @@
  document.addEventListener('DOMContentLoaded', () => {
-   document.getElementById("translateBtn").addEventListener("click", async () => {
-      let text = document.getElementById("inputText").value;
-      if (!text) return;
-      fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const translation = data.translated;
-        if (translation) {
-          document.getElementById("output").textContent = translation;
-          chrome.storage.local.get("vocabulary_list", (data) => {
-            let vocabulary_list = data.vocabulary_list || [];
-            vocabulary_list.push([text, translation]);
-            chrome.storage.local.set({ vocabulary_list });
-          });
-        } else {
-          console.log('oh noooooo');
+    document.querySelectorAll('.accordion .title').forEach(title => {
+      title.addEventListener('click', () => {
+        const item = title.parentElement;
+        const content = item.querySelector('.content');
+        item.classList.toggle('open');
+
+        if (item.querySelector('#vocab-div') && item.classList.contains('open')) {
+          console.log("hello")
+          renderVocabList();
         }
-      })
+      });
     });
+
+  //  document.getElementById("translateBtn").addEventListener("click", async () => {
+  //     let text = document.getElementById("inputText").value;
+  //     if (!text) return;
+  //     fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ text: text })
+  //     })
+  //     .then(res => res.json())
+  //     .then(data => {
+  //       const translation = data.translated;
+  //       if (translation) {
+  //         document.getElementById("output").textContent = translation;
+  //         chrome.storage.local.get("vocabulary_list", (data) => {
+  //           let vocabulary_list = data.vocabulary_list || [];
+  //           vocabulary_list.push([text, translation]);
+  //           chrome.storage.local.set({ vocabulary_list });
+  //         });
+  //       } else {
+  //         console.log('oh noooooo');
+  //       }
+  //     })
+  //   });
 
     const levelSet = document.getElementById('levels')
     chrome.storage.local.get("language_level", (data) => {
@@ -33,26 +46,90 @@
 
     const levelBtn = document.getElementById('level-btn')
     levelBtn.addEventListener("click", () => {
+      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+        if (!supabaseToken) {
+          console.log('no token')
+          return;
+        }
+        fetch("https://immersive-server.netlify.app/.netlify/functions/update_level", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+          body: JSON.stringify({ level: levelSet.value })
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(data)
+        })
+        .catch((err) => {
+          console.error("Fetch failed:", err);
+        });
+      })
       chrome.storage.local.set({ language_level: levelSet.value });
       const toast = document.getElementById('toast-icon');
-        toast.style.visibility = "visible";
-        setTimeout(() => {
-          toast.style.visibility = "hidden";
-        }, 1000);
+      toast.style.visibility = "visible";
+      setTimeout(() => {
+        toast.style.visibility = "hidden";
+      }, 1000);
     })
 
-    const listBtn = document.getElementById('listBtn')
-    listBtn.addEventListener("click", () => {
+    const feedbackBtn = document.getElementById('feedbackBtn')
+    feedbackBtn.addEventListener("click", () => {
+      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+        if (!supabaseToken) {
+          console.log('no token')
+          return;
+        }
+        const feedback = document.getElementById('inputText').value
+        fetch("https://immersive-server.netlify.app/.netlify/functions/feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+          body: JSON.stringify({ feedback })
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(data)
+          const feedbackBox = document.getElementById('inputText')
+          feedbackBox.value = ''
+        })
+        .catch((err) => {
+          console.error("Fetch failed:", err);
+        });
+      })
+      const toast = document.getElementById('toast-feedback');
+      toast.style.visibility = "visible";
+      setTimeout(() => {
+        toast.style.visibility = "hidden";
+      }, 1000);
+    })
+
+    function renderVocabList() {
+      const vocabListHtml = document.getElementById("vocabList");
+
       chrome.storage.local.get("vocabulary_list", (data) => {
         let vocabList = data.vocabulary_list || [];
-        let vocabListHtml = document.getElementById("vocabList")
-        vocabListHtml.innerHTML = ''
+        vocabListHtml.innerHTML = '<h4>Your looked up vocabulary:</h4>';
+
         vocabList.forEach((vocab, index) => {
-          const vocabListItem = `<li id='list-item-${index}' style='display: flex;'>
+          const old = `<li id='list-item-${index}' style='display: flex;'>
             <p style="margin-right: 5px;">${vocab[0]} -> ${vocab[1]}</p>
             <button id='vocab-${index}'>X</button>
           </li>`
+
+          const vocabListItem = `<div id='list-item-${index}' class="vocab-card" style="width: 250px; padding: 5px; margin-bottom: 10px;
+                                    background-color: white;
+                                    border: 1px solid black;
+                                    border-radius: 8px;">
+                          <div style="display: flex; justify-content: space-between;">
+                            <p>${vocab[0]}</p>
+                            <div style="display: flex;">
+                              <img height="20" id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+                              <img height="20" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
+                            </div>
+                          </div>
+                          <p>${vocab[1]}</p>
+                        </div>`
           vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
+
           setTimeout(() => {
             const deleteButton = document.getElementById(`vocab-${index}`)
             deleteButton.addEventListener('click', (event) => {
@@ -66,12 +143,8 @@
           }, 0);
         })
         vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
-        vocabListHtml.insertAdjacentHTML("afterbegin", `<h2>Your looked up vocabulary:</h2>`)
-        // document.getElementById("vocabList").textContent = "Your Vocabulary:\n" + vocabList.map(v => `${v[0]} -> ${v[1]}`).join("\n")
       });
-      listBtn.style.display = "none"
-    })
-
+    }
 
     const vocabListDiv = document.getElementById('vocab-div')
     chrome.storage.local.get("vocabulary_list", (data) => {
@@ -102,7 +175,7 @@
           })
         }
       } else {
-        vocabListDiv.style.display = 'none'
+        console.log("here was display none")
       }
     });
  })
