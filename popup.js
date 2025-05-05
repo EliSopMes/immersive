@@ -1,3 +1,5 @@
+let isSpeaking = false;
+
  document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.accordion .title').forEach(title => {
       title.addEventListener('click', () => {
@@ -74,12 +76,16 @@
 
     const feedbackBtn = document.getElementById('feedbackBtn')
     feedbackBtn.addEventListener("click", () => {
+      const feedback = document.getElementById('inputText').value
+      if (feedback === "") {
+        return;
+      }
       chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
         if (!supabaseToken) {
           console.log('no token')
           return;
         }
-        const feedback = document.getElementById('inputText').value
+
         fetch("https://immersive-server.netlify.app/.netlify/functions/feedback", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
@@ -107,44 +113,77 @@
 
       chrome.storage.local.get("vocabulary_list", (data) => {
         let vocabList = data.vocabulary_list || [];
-        vocabListHtml.innerHTML = '<h4>Your looked up vocabulary:</h4>';
-
-        vocabList.forEach((vocab, index) => {
-          const old = `<li id='list-item-${index}' style='display: flex;'>
-            <p style="margin-right: 5px;">${vocab[0]} -> ${vocab[1]}</p>
-            <button id='vocab-${index}'>X</button>
-          </li>`
-
-          const vocabListItem = `<div id='list-item-${index}' class="vocab-card" style="width: 250px; padding: 5px; margin-bottom: 10px;
-                                    background-color: white;
-                                    border: 1px solid black;
-                                    border-radius: 8px;">
-                          <div style="display: flex; justify-content: space-between;">
-                            <p>${vocab[0]}</p>
-                            <div style="display: flex;">
-                              <img height="20" id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-                              <img height="20" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
+        if (vocabList.length > 0) {
+          vocabListHtml.innerHTML = '';
+          vocabList.forEach((vocab, index) => {
+            const vocabListItem = `<div id='list-item-${index}' class="vocab-card">
+                            <div style="display: flex; justify-content: space-between;">
+                              <p>${vocab[0]}</p>
+                              <div style="display: flex;">
+                                <img height="16" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+                                <img height="14" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
+                              </div>
                             </div>
-                          </div>
-                          <p>${vocab[1]}</p>
-                        </div>`
-          vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
+                            <p>${vocab[1]}</p>
+                          </div>`
+            vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
 
-          setTimeout(() => {
-            const deleteButton = document.getElementById(`vocab-${index}`)
-            deleteButton.addEventListener('click', (event) => {
-              event.preventDefault();
-              const index = vocabList.indexOf(vocab);
-              vocabList.splice(index, 1);
-              chrome.storage.local.set({ vocabulary_list: vocabList})
-              const domElement = document.getElementById(`list-item-${index}`)
-              domElement.remove();
-            })
-          }, 0);
-        })
+            setTimeout(() => {
+              const deleteButton = document.getElementById(`vocab-${index}`)
+              deleteButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                const index = vocabList.indexOf(vocab);
+                vocabList.splice(index, 1);
+                chrome.storage.local.set({ vocabulary_list: vocabList})
+                const domElement = document.getElementById(`list-item-${index}`)
+                domElement.remove();
+              })
+              const audioButton = document.getElementById(`btn-audio-${index}`)
+              audioButton.addEventListener('click', (event) => {
+                if (isSpeaking) {
+                  window.speechSynthesis.cancel(); // Stop speech if already speaking
+                  isSpeaking = false;
+                } else {
+                  const utterance = new SpeechSynthesisUtterance(vocab[0]);
+                  utterance.lang = 'de'; // Set language code (e.g., "de" for German, "en" for English)
+                  utterance.onend = () => {
+                    isSpeaking = false; // Reset when done
+                  };
+                  window.speechSynthesis.speak(utterance);
+                  isSpeaking = true;
+                }
+              })
+            }, 0);
+          })
+        } else {
+          vocabListHtml.innerHTML = "<div>You haven't saved any vocabulary yet.</div>";
+        }
         vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
       });
     }
+
+    const practiceBtn = document.getElementById('practice')
+    practiceBtn.addEventListener('click', () => {
+      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+        if (!supabaseToken) {
+          console.log('no token')
+          return;
+        }
+        fetch("https://immersive-server.netlify.app/.netlify/functions/practice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+          body: JSON.stringify({ message: 'user interested' })
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(data)
+        })
+        .catch((err) => {
+          console.error("Fetch failed:", err);
+        });
+      })
+      document.getElementById('practice-interest').innerHTML = '<p>Launching soon ...</p>'
+    })
 
     const vocabListDiv = document.getElementById('vocab-div')
     chrome.storage.local.get("vocabulary_list", (data) => {

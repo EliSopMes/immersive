@@ -7,7 +7,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">  </head>
   <body>
-    <h3>Immersive</h3>
+    <div style="display: flex; justify-content: space-between;">
+      <h3>Immersive</h3>
+      <a href="#" target="_blank">
+        <img height="20" src="/pngs/info.svg" alt="info" title="info" class="context-icons" style="margin-top: 10px;">
+      </a>
+    </div>
     <hr>
     <br>
     <div class="accordion">
@@ -51,10 +56,12 @@
       </div>
       <div class="item">
         <div class="title">My practice</div>
-        <div class="content">Launching soon ...</div>
+        <div class="content" id="practice-interest">
+          <button id="practice">Practice now</button>
+        </div>
       </div>
       <div class="item">
-        <div class="title">Leave your feedback</div>
+        <div class="title">Care to Share More?</div>
         <div class="content" id="pin-popup">
           <textarea name="feedback" rows="5" id="inputText" placeholder="What would you like to tell us?" style="width: 250px;"></textarea>
           <br>
@@ -78,6 +85,9 @@
           </div>
         </div>
       </div>
+      <br>
+      <a href="#" style="color: black;">Log out</a>
+      <br><br>
     </div>
 
 
@@ -139,5 +149,20 @@
     max-height: 500px; /* large enough to accommodate content */
     padding: 12px;
   }
+
+
+.vocab-card {
+  width: 250px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 8px;
+
+  p {
+    margin: 2px 0px;
+    font-size: 16px;
+  }
+}
 
 </style>

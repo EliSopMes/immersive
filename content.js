@@ -22,7 +22,34 @@ window.addEventListener("message", (event) => {
       refreshToken: refreshToken,
     });
   }
+
+  if (event.data.type === "EXPIRATION") {
+    const expires_at = event.data.expires_at
+    console.log(expires_at)
+    chrome.storage.local.set({
+      expires_at: expires_at,
+    });
+  }
 });
+
+function checkExpiration() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("expires_at" , async ({ expires_at }) =>  {
+      if (!expires_at) {
+        console.log('no expiration')
+        resolve(true);
+        return;
+      }
+      const timestamp = Math.floor(Date.now() / 1000);
+      console.log(timestamp);
+      if (expires_at > timestamp) {
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    })
+  })
+}
 
 async function getNewAccessToken() {
   const { supabaseRefreshToken } = await chrome.storage.local.get("refreshToken");
@@ -56,6 +83,18 @@ document.addEventListener('mouseup', function (event) {
 });
 
 function createPopup(selectedText, number_of_highlighted_words) {
+  checkExpiration().then((isExpired) => {
+    console.log("Expired:", isExpired);
+  });
+  chrome.storage.local.get(["supabaseToken", "refreshToken"] , async ({ supabaseToken, refreshToken }) => {
+    if (!refreshToken) {
+      console.log('no token')
+      return;
+    } else {
+      console.log(refreshToken)
+      console.log(supabaseToken)
+    }
+  })
   // Check if popup already exists, to prevent duplicates
   let existingPopup = document.getElementById("customPopup");
   if (existingPopup) {
@@ -178,7 +217,51 @@ function auth_refresh(url, body) {
 }
 
 function simplify(selectedText, level, number_of_highlighted_words) {
-  chrome.storage.local.get("supabaseToken" , async ({ supabaseToken }) => {
+  let oldPopup = document.getElementById("choicePopup");
+  if (oldPopup) oldPopup.remove();
+
+  let choicePopup = document.createElement("div");
+  choicePopup.id = "choicePopup";
+
+  // Get selection coordinates
+  const selection = window.getSelection();
+  const range = selection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+
+  choicePopup.style.position = "absolute";
+  choicePopup.style.width = "305px";
+  choicePopup.style.fontFamily = "'Poppins', sans-serif";
+  choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+  choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+  choicePopup.style.background = "white";
+  choicePopup.style.border = "1px solid #D9D9D9";
+  choicePopup.style.borderRadius = "8px";
+  choicePopup.style.padding = "8px 12px";
+  choicePopup.style.zIndex = "9999";
+  choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+  choicePopup.innerHTML = `
+    <div id="choicePopup">
+      <div style="display: flex; justify-content: space-between;">
+        <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+        <button class="closePopup">X</button>
+      </div>
+      <hr>
+      <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
+        <div class="loader"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(choicePopup);
+
+  setTimeout(() => {
+    document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+    });
+  }, 100);
+
+  
+  chrome.storage.local.get(["supabaseToken", "expires_at"] , async ({ supabaseToken, expires_at }) =>  {
     if (!supabaseToken) {
       console.log('no token')
       return;
@@ -191,6 +274,9 @@ function simplify(selectedText, level, number_of_highlighted_words) {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
         body: JSON.stringify({ text: selectedText, level })
       });
+      if (res.status === 401) {
+        console.log("Unauthorized");
+      }
       if (res.status === 401) throw new Error("Unauthorized");
 
       return res.json();
@@ -200,28 +286,6 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       const data = await makeRequest(supabaseToken);
       const simplified = taskToDo === "define" ? JSON.parse(data.simplified) : data.simplified;
 
-      let oldPopup = document.getElementById("choicePopup");
-      if (oldPopup) oldPopup.remove();
-
-      let choicePopup = document.createElement("div");
-      choicePopup.id = "choicePopup";
-
-      // Get selection coordinates
-      const selection = window.getSelection();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-
-      choicePopup.style.position = "absolute";
-      choicePopup.style.width = "305px";
-      choicePopup.style.fontFamily = "'Poppins', sans-serif";
-      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-      choicePopup.style.background = "white";
-      choicePopup.style.border = "1px solid #D9D9D9";
-      choicePopup.style.borderRadius = "8px";
-      choicePopup.style.padding = "8px 12px";
-      choicePopup.style.zIndex = "9999";
-      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
       const synonyms = simplified.synonyms ? `<strong><p>Synonyme</p></strong><ul style="list-style-type:disc;"> ${simplified.synonyms.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
       const examples = simplified.examples ? `<strong><p>Beispiele</p></strong><ul style="list-style-type:disc;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
       innerDefine =  `<div id="choicePopup">
@@ -272,7 +336,6 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       }
 
       // Append choicePopup to body
-      document.body.appendChild(choicePopup);
 
       setTimeout(() => {
         document.getElementById("btn-copy").addEventListener("click", () => {
@@ -306,6 +369,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       if (err.message === "Unauthorized") {
         try {
           const newToken = await getNewAccessToken();
+          console.log(newToken)
           const data = await makeRequest(newToken);
 
         } catch (refreshErr) {
@@ -424,6 +488,49 @@ function translate(selectedText, number_of_highlighted_words) {
 }
 
 function translateGPT(selectedText, number_of_highlighted_words) {
+  let oldPopup = document.getElementById("choicePopup");
+  if (oldPopup) oldPopup.remove();
+
+  let choicePopup = document.createElement("div");
+  choicePopup.id = "choicePopup";
+
+  // Get selection coordinates
+  const selection = window.getSelection();
+  const range = selection.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+
+  choicePopup.style.position = "absolute";
+  choicePopup.style.width = "305px";
+  choicePopup.style.fontFamily = "'Poppins', sans-serif";
+  choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+  choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+  choicePopup.style.background = "white";
+  choicePopup.style.border = "1px solid #D9D9D9";
+  choicePopup.style.borderRadius = "8px";
+  choicePopup.style.padding = "8px 12px";
+  choicePopup.style.zIndex = "9998";
+  choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+
+  choicePopup.innerHTML = `
+    <div id="choicePopup">
+      <div style="display: flex; justify-content: space-between;">
+        <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+        <button class="closePopup">X</button>
+      </div>
+      <hr>
+      <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
+        <div class="loader"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(choicePopup);
+
+  setTimeout(() => {
+    document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+    });
+  }, 100);
+
   chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
     if (!supabaseToken) {
       console.log('no token')
@@ -437,29 +544,6 @@ function translateGPT(selectedText, number_of_highlighted_words) {
     .then(res => res.json())
     .then(data => {
       const translation = JSON.parse(data.translated);
-
-      let oldPopup = document.getElementById("choicePopup");
-      if (oldPopup) oldPopup.remove();
-
-      let choicePopup = document.createElement("div");
-      choicePopup.id = "choicePopup";
-
-      // Get selection coordinates
-      const selection = window.getSelection();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-
-      choicePopup.style.position = "absolute";
-      choicePopup.style.width = "305px";
-      choicePopup.style.fontFamily = "'Poppins', sans-serif";
-      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-      choicePopup.style.background = "white";
-      choicePopup.style.border = "1px solid #D9D9D9";
-      choicePopup.style.borderRadius = "8px";
-      choicePopup.style.padding = "8px 12px";
-      choicePopup.style.zIndex = "9998";
-      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
       // Add buttons
       choicePopup.innerHTML = `
@@ -489,9 +573,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
           </div>
         </div>
       `;
-
       // Append choicePopup to body
-      document.body.appendChild(choicePopup);
 
       setTimeout(() => {
         document.getElementById("btn-copy").addEventListener("click", () => {
