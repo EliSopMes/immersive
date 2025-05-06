@@ -1,5 +1,4 @@
 let vocabulary_list = []
-let defintion_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
 
@@ -10,66 +9,23 @@ window.addEventListener("message", (event) => {
 
   if (event.data.type === "SUPABASE_TOKEN") {
     const token = event.data.token;
-    console.log(token);
     chrome.storage.local.set({
       supabaseToken: token,
     });
   }
   if (event.data.type === "REFRESH_TOKEN") {
     const refreshToken = event.data.refresh_token
-    console.log(refreshToken)
     chrome.storage.local.set({
       refreshToken: refreshToken,
     });
   }
-
   if (event.data.type === "EXPIRATION") {
     const expires_at = event.data.expires_at
-    console.log(expires_at)
     chrome.storage.local.set({
       expires_at: expires_at,
     });
   }
 });
-
-function checkExpiration() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get("expires_at" , async ({ expires_at }) =>  {
-      if (!expires_at) {
-        console.log('no expiration')
-        resolve(true);
-        return;
-      }
-      const timestamp = Math.floor(Date.now() / 1000);
-      console.log(timestamp);
-      if (expires_at > timestamp) {
-        resolve(false);
-      } else {
-        resolve(true);
-      }
-    })
-  })
-}
-
-async function getNewAccessToken() {
-  const { supabaseRefreshToken } = await chrome.storage.local.get("refreshToken");
-  if (!supabaseRefreshToken) throw new Error("No refresh token available.");
-
-  const supabase = createClient("https://gbxmuqfqwiehvsfwpouw.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdieG11cWZxd2llaHZzZndwb3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTI3NTIsImV4cCI6MjA1OTkyODc1Mn0.J_aP5NqxbosSYiWpSujYt3tKskCTKJpqpvju_QZ9oQU");
-  const { data, error } = await supabase.auth.refreshSession({ refresh_token: supabaseRefreshToken });
-
-  if (error) throw new Error("Failed to refresh session: " + error.message);
-
-  const newAccessToken = data.session.access_token;
-  const newRefreshToken = data.session.refresh_token;
-
-  await chrome.storage.local.set({
-    supabaseToken: newAccessToken,
-    refreshToken: newRefreshToken,
-  });
-
-  return newAccessToken;
-}
 
 document.addEventListener('mouseup', function (event) {
   const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
@@ -83,137 +39,124 @@ document.addEventListener('mouseup', function (event) {
 });
 
 function createPopup(selectedText, number_of_highlighted_words) {
-  checkExpiration().then((isExpired) => {
-    console.log("Expired:", isExpired);
-  });
-  chrome.storage.local.get(["supabaseToken", "refreshToken"] , async ({ supabaseToken, refreshToken }) => {
-    if (!refreshToken) {
-      console.log('no token')
-      return;
+  chrome.storage.local.get(["supabaseToken", "expires_at"] , async ({ supabaseToken, expires_at }) => {
+    // Check if popup already exists, to prevent duplicates
+    let existingPopup = document.getElementById("customPopup");
+    if (existingPopup) {
+      existingPopup.remove();
+    }
+    let choicePopup = document.getElementById("choicePopup");
+    if (choicePopup) {
+      choicePopup.remove();
+    }
+
+    let popup = document.createElement("div");
+    popup.id = "customPopup";
+
+    // Get selection coordinates
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    popup.style.position = "absolute";
+    popup.style.fontFamily = "'Poppins', sans-serif";
+
+    popup.style.width = "138px";
+    const padding = 10;
+    const desiredLeft = rect.right - 138;
+    const maxLeft = window.innerWidth - 138 - padding;
+    const adjustedLeft = Math.max(padding, Math.min(desiredLeft + window.scrollX, maxLeft));
+
+    popup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
+    popup.style.left = `${adjustedLeft}px`; // Adjust X position
+    popup.style.background = "white";
+    popup.style.border = "1px solid #D9D9D9";
+    popup.style.borderRadius = "8px";
+    popup.style.padding = "8px 12px";
+    popup.style.zIndex = "9999";
+    popup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
+
+    const isExpired = expires_at && Date.now() / 1000 > expires_at;
+
+    if (!supabaseToken || isExpired) {
+      popup.innerHTML = `
+        <div>
+          <h3>You're logged out</h3>
+          <button id="loginBtn">Log In</button>
+        </div>
+      `;
     } else {
-      console.log(refreshToken)
-      console.log(supabaseToken)
+      popup.innerHTML = `
+        <div id="popup-styling" style="display: flex; justify-content: space-between;">
+          <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+          <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
+          <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+          <button class="closePopup">X</button>
+        </div>
+      `;
     }
-  })
-  // Check if popup already exists, to prevent duplicates
-  let existingPopup = document.getElementById("customPopup");
-  if (existingPopup) {
-    existingPopup.remove();
-  }
-  let choicePopup = document.getElementById("choicePopup");
-  if (choicePopup) {
-    choicePopup.remove();
-  }
 
-  // Create the popup container
-  let popup = document.createElement("div");
-  popup.id = "customPopup";
+    // Append popup to body
+    document.body.appendChild(popup);
 
-  // Get selection coordinates
-  const selection = window.getSelection();
-  const range = selection.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-
-  popup.style.position = "absolute";
-  popup.style.width = "138px";
-  // popup.style.height = "34px";
-  popup.style.fontFamily = "'Poppins', sans-serif";
-  popup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-  popup.style.left = `${rect.right - 200 + window.scrollX}px`; // Adjust X position
-  popup.style.background = "white";
-  popup.style.border = "1px solid #D9D9D9";
-  popup.style.borderRadius = "8px";
-  popup.style.padding = "8px 12px";
-  popup.style.zIndex = "9999";
-  popup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-
-  // Add buttons
-  popup.innerHTML = `
-    <div id="popup-styling" style="display: flex; justify-content: space-between;">
-      <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
-      <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
-      <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-      <button class="closePopup">X</button>
-    </div>
-  `;
-
-  // Append popup to body
-  document.body.appendChild(popup);
-
-  // ✅ Ensure Event Listeners Work
-  setTimeout(() => {
-    document.getElementById("btn1").addEventListener("click", () => {
-      translateGPT(selectedText, number_of_highlighted_words);
-      // translate(selectedText, number_of_highlighted_words);
-      popup.remove();
-    });
-    document.getElementById("btn2").addEventListener("click", () => {
-      chrome.storage.local.get("language_level" , (data) => {
-        const level = data.language_level || 'A2';
-        simplify(selectedText, level, number_of_highlighted_words);
-        popup.remove();
-      })
-    });
-    document.getElementById("btn3").addEventListener("click", (event) => {
-      if (event.target.innerHTML === 'pause') {
-        event.target.innerHTML = "pronounce"
-      } else {
-        event.target.innerHTML = "pause"
-      }
-      pronounce(selectedText, "de");
-    });
-    document.querySelector(".closePopup").addEventListener("click", () => {
-      popup.remove();
-      cleanup();
-    });
-  }, 100);  // Small delay ensures the elements exist
-
-  function cleanup() {
-    document.removeEventListener("click", handleOutsideClick);
-    window.removeEventListener("scroll", handleScroll());
-  }
-
-  function handleOutsideClick(event) {
-    if (!popup.contains(event.target)) {
-      popup.remove();
-      cleanup();
-    }
-  }
-
-  function handleScroll() {
-    const popupRect = popup.getBoundingClientRect();
-    const isOutOfView =
-      popupRect.bottom < 0 || popupRect.top > window.innerHeight;
-
-    if (isOutOfView) {
-      popup.remove();
-      cleanup();
-    }
-  }
-  setTimeout(() => {
-    document.addEventListener("click", handleOutsideClick);
-  }, 0);
-  window.addEventListener("scroll", handleScroll);
-}
-
-function auth_refresh(url, body) {
-  chrome.storage.local.get("supabaseToken" , async ({ supabaseToken }) => {
-    if (!supabaseToken) {
-      console.log('no token')
-      return;
-    }
-    const body = { text: selectedText, level }
-    const makeRequest = async (token) => {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
-        body: JSON.stringify(body)
+    // ✅ Ensure Event Listeners Work
+    setTimeout(() => {
+      document.getElementById("loginBtn")?.addEventListener("click", () => {
+        chrome.runtime.sendMessage({ type: "OPEN_LOGIN_POPUP" });
       });
-      if (res.status === 401) throw new Error("Unauthorized");
+      document.getElementById("btn1").addEventListener("click", () => {
+        translateGPT(selectedText, number_of_highlighted_words);
+        // translate(selectedText, number_of_highlighted_words);
+        popup.remove();
+      });
+      document.getElementById("btn2").addEventListener("click", () => {
+        chrome.storage.local.get("language_level" , (data) => {
+          const level = data.language_level || 'A2';
+          simplify(selectedText, level, number_of_highlighted_words);
+          popup.remove();
+        })
+      });
+      document.getElementById("btn3").addEventListener("click", (event) => {
+        if (event.target.innerHTML === 'pause') {
+          event.target.innerHTML = "pronounce"
+        } else {
+          event.target.innerHTML = "pause"
+        }
+        pronounce(selectedText, "de");
+      });
+      document.querySelector(".closePopup").addEventListener("click", () => {
+        popup.remove();
+        cleanup();
+      });
+    }, 100);  // Small delay ensures the elements exist
 
-      return res.json();
-    };
-  });
+    function cleanup() {
+      document.removeEventListener("click", handleOutsideClick);
+      window.removeEventListener("scroll", handleScroll());
+    }
+
+    function handleOutsideClick(event) {
+      if (!popup.contains(event.target)) {
+        popup.remove();
+        cleanup();
+      }
+    }
+
+    function handleScroll() {
+      const popupRect = popup.getBoundingClientRect();
+      const isOutOfView =
+        popupRect.bottom < 0 || popupRect.top > window.innerHeight;
+
+      if (isOutOfView) {
+        popup.remove();
+        cleanup();
+      }
+    }
+    setTimeout(() => {
+      document.addEventListener("click", handleOutsideClick);
+    }, 0);
+    window.addEventListener("scroll", handleScroll);
+  })
 }
 
 function simplify(selectedText, level, number_of_highlighted_words) {
@@ -231,8 +174,14 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   choicePopup.style.position = "absolute";
   choicePopup.style.width = "305px";
   choicePopup.style.fontFamily = "'Poppins', sans-serif";
+
+  const padding = 10;
+  const desiredLeft = rect.right - 305;
+  const maxLeft = window.innerWidth - 305 - padding;
+  const adjustedLeft = Math.max(padding, Math.min(desiredLeft + window.scrollX, maxLeft));
+
   choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-  choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+  choicePopup.style.left = `${adjustedLeft}px`; // Adjust X position
   choicePopup.style.background = "white";
   choicePopup.style.border = "1px solid #D9D9D9";
   choicePopup.style.borderRadius = "8px";
@@ -257,10 +206,11 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   setTimeout(() => {
     document.querySelector(".closePopup").addEventListener("click", () => {
       choicePopup.remove();
+      cleanup();
     });
   }, 100);
 
-  
+
   chrome.storage.local.get(["supabaseToken", "expires_at"] , async ({ supabaseToken, expires_at }) =>  {
     if (!supabaseToken) {
       console.log('no token')
@@ -276,8 +226,8 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       });
       if (res.status === 401) {
         console.log("Unauthorized");
+        throw new Error("Unauthorized");
       }
-      if (res.status === 401) throw new Error("Unauthorized");
 
       return res.json();
     };
@@ -363,127 +313,39 @@ function simplify(selectedText, level, number_of_highlighted_words) {
         });
         document.querySelector(".closePopup").addEventListener("click", () => {
           choicePopup.remove();
+          cleanup();
         });
       }, 100);
-    } catch (err) {
-      if (err.message === "Unauthorized") {
-        try {
-          const newToken = await getNewAccessToken();
-          console.log(newToken)
-          const data = await makeRequest(newToken);
 
-        } catch (refreshErr) {
-          console.error("Token refresh failed:", refreshErr);
-        }
-      } else {
-        console.error("Fetch failed:", err);
+      function cleanup() {
+        document.removeEventListener("click", handleOutsideClick);
+        window.removeEventListener("scroll", handleScroll());
       }
-    }
-  });
-}
 
-function translate(selectedText, number_of_highlighted_words) {
-  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
-    if (!supabaseToken) {
-      console.log('no token')
-      return;
-    }
-    fetch("https://immersive-server.netlify.app/.netlify/functions/translateGPT", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-      body: JSON.stringify({ text: selectedText })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const translation = data.translated;
-
-      let oldPopup = document.getElementById("choicePopup");
-      if (oldPopup) oldPopup.remove();
-
-      let choicePopup = document.createElement("div");
-      choicePopup.id = "choicePopup";
-
-      // Get selection coordinates
-      const selection = window.getSelection();
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-
-      choicePopup.style.position = "absolute";
-      choicePopup.style.width = "305px";
-      choicePopup.style.fontFamily = "'Poppins', sans-serif";
-      choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-      choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
-      choicePopup.style.background = "white";
-      choicePopup.style.border = "1px solid #D9D9D9";
-      choicePopup.style.borderRadius = "8px";
-      choicePopup.style.padding = "8px 12px";
-      choicePopup.style.zIndex = "9999";
-      choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
-
-      // Add buttons
-      choicePopup.innerHTML = `
-        <div id="choicePopup">
-          <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-            <button class="closePopup">X</button>
-          </div>
-          <hr>
-          <p class="choice-text">${translation}</p>
-          <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-            <div style="${number_of_highlighted_words > 3 ? "display: none" : ""}">
-              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-              <div id="toast">
-                Saved!
-              </div>
-            </div>
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-            <div id="toast-copy">
-              Saved to clipboard!
-            </div>
-            <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
-          </div>
-        </div>
-      `;
-
-      // Append choicePopup to body
-      document.body.appendChild(choicePopup);
-
-      setTimeout(() => {
-        document.getElementById("btn-copy").addEventListener("click", () => {
-          navigator.clipboard.writeText(translation);
-          const toast = document.getElementById('toast-copy');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
-          vocabulary_list.push([selectedText, translation]);
-          chrome.storage.local.set({ vocabulary_list });
-          const toast = document.getElementById('toast');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-simple").addEventListener("click", () => {
-          chrome.storage.local.get("language_level" , (data) => {
-            const level = data.language_level || 'A2';
-            simplify(selectedText, level, number_of_highlighted_words);
-          })
-        });
-        document.getElementById("btn-audio").addEventListener("click", () => {
-          pronounce(selectedText, 'de');
-        });
-        document.querySelector(".closePopup").addEventListener("click", () => {
+      function handleOutsideClick(event) {
+        if (!choicePopup.contains(event.target)) {
           choicePopup.remove();
-        });
-      }, 100);
-    })
-    .catch((err) => {
+          cleanup();
+        }
+      }
+
+      function handleScroll() {
+        const popupRect = choicePopup.getBoundingClientRect();
+        const isOutOfView =
+          popupRect.bottom < 0 || popupRect.top > window.innerHeight;
+
+        if (isOutOfView) {
+          choicePopup.remove();
+          cleanup();
+        }
+      }
+      setTimeout(() => {
+        document.addEventListener("click", handleOutsideClick);
+      }, 0);
+      window.addEventListener("scroll", handleScroll);
+    } catch (err) {
       console.error("Fetch failed:", err);
-    });
+    }
   });
 }
 
@@ -502,8 +364,14 @@ function translateGPT(selectedText, number_of_highlighted_words) {
   choicePopup.style.position = "absolute";
   choicePopup.style.width = "305px";
   choicePopup.style.fontFamily = "'Poppins', sans-serif";
+
+  const padding = 10;
+  const desiredLeft = rect.right - 305;
+  const maxLeft = window.innerWidth - 305 - padding;
+  const adjustedLeft = Math.max(padding, Math.min(desiredLeft + window.scrollX, maxLeft));
+
   choicePopup.style.top = `${window.scrollY + rect.bottom + 5}px`; // Adjust Y position
-  choicePopup.style.left = `${rect.right - 200  + window.scrollX}px`; // Adjust X position
+  choicePopup.style.left = `${adjustedLeft}px`;
   choicePopup.style.background = "white";
   choicePopup.style.border = "1px solid #D9D9D9";
   choicePopup.style.borderRadius = "8px";
@@ -528,6 +396,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
   setTimeout(() => {
     document.querySelector(".closePopup").addEventListener("click", () => {
       choicePopup.remove();
+      cleanup();
     });
   }, 100);
 
@@ -586,7 +455,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
         });
         document.getElementById("btn-vocab").addEventListener("click", () => {
           const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
-          save_vocabulary(germanWord, translation.translation)
+          save_vocabulary(germanWord, translation.translation, translation.word_type)
           const toast = document.getElementById('toast');
           toast.style.visibility = "visible";
           setTimeout(() => {
@@ -604,8 +473,36 @@ function translateGPT(selectedText, number_of_highlighted_words) {
         });
         document.querySelector(".closePopup").addEventListener("click", () => {
           choicePopup.remove();
+          cleanup();
         });
       }, 100);
+
+      function cleanup() {
+        document.removeEventListener("click", handleOutsideClick);
+        window.removeEventListener("scroll", handleScroll());
+      }
+
+      function handleOutsideClick(event) {
+        if (!choicePopup.contains(event.target)) {
+          choicePopup.remove();
+          cleanup();
+        }
+      }
+
+      function handleScroll() {
+        const popupRect = choicePopup.getBoundingClientRect();
+        const isOutOfView =
+          popupRect.bottom < 0 || popupRect.top > window.innerHeight;
+
+        if (isOutOfView) {
+          choicePopup.remove();
+          cleanup();
+        }
+      }
+      setTimeout(() => {
+        document.addEventListener("click", handleOutsideClick);
+      }, 0);
+      window.addEventListener("scroll", handleScroll);
     })
     .catch((err) => {
       console.error("Fetch failed:", err);
@@ -614,6 +511,31 @@ function translateGPT(selectedText, number_of_highlighted_words) {
 }
 
 function translate_from_simplified(selectedText, number_of_highlighted_words) {
+  let oldPopup = document.getElementById("choicePopup");
+  let existingPopup = document.getElementById("translate-from-simplified");
+  if (existingPopup) {
+    existingPopup.remove();
+  }
+  const additionalHTML = `
+    <div id="translate-from-simplified">
+      <div style="display: flex; justify-content: space-between;">
+        <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+        <button class="closePopup">X</button>
+      </div>
+      <hr>
+      <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
+        <div class="loader"></div>
+      </div>
+    </div>
+  `;
+  oldPopup.insertAdjacentHTML('beforeend', additionalHTML);
+
+  setTimeout(() => {
+    document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+      cleanup();
+    });
+  }, 100);
   chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
     if (!supabaseToken) {
       console.log('no token')
@@ -627,9 +549,7 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
     .then(res => res.json())
     .then(data => {
       const translation = JSON.parse(data.translated);
-      selectedText.split(/\s+/).length;
-      let oldPopup = document.getElementById("choicePopup");
-      const number_of_words = selectedText.split(/\s+/).length
+      const number_of_words = selectedText.split(/\s+/).length;
       let existingPopup = document.getElementById("translate-from-simplified");
       if (existingPopup) {
         existingPopup.remove();
@@ -674,7 +594,7 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
         });
         document.getElementById("btn-vocab").addEventListener("click", () => {
           const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
-          save_vocabulary(germanWord, translation.translation)
+          save_vocabulary(germanWord, translation.translation, translation.word_type)
           const toast = document.getElementById('toast');
           toast.style.visibility = "visible";
           setTimeout(() => {
@@ -707,7 +627,7 @@ function pronounce(selectedText, language) {
   }
 }
 
-function save_vocabulary(original_word, translated_word) {
+function save_vocabulary(original_word, translated_word, word_type) {
   vocabulary_list.push([original_word, translated_word]);
   chrome.storage.local.set({ vocabulary_list });
   chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
@@ -718,7 +638,7 @@ function save_vocabulary(original_word, translated_word) {
     fetch(`https://immersive-server.netlify.app/.netlify/functions/save_vocab`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-      body: JSON.stringify({ original_word, translated_word })
+      body: JSON.stringify({ original_word, translated_word, word_type })
     })
     .then(res => res.json())
     .then(data => {
@@ -729,54 +649,3 @@ function save_vocabulary(original_word, translated_word) {
     });
   });
 }
-
-const style = document.createElement('style')
-style.innerHTML = `
-  .highlighted-text {
-    background-color: yellow;
-    color: black;
-    font-weight: bold;v
-    padding: 2px 4px;
-    border-radius: 3px;
-  }
-`;
-
-document.head.appendChild(style);
-
-
-// window.addEventListener("scroll", () => {
-//   const scrollPosition = window.scrollY + window.innerHeight;
-//   const totalPosition = document.documentElement.scrollHeight;
-
-//   const scrollPercentage = (scrollPosition / totalPosition) * 100
-
-//   if (scrollPercentage >= 70) {
-//     let exercisePopup = document.createElement("div");
-//     exercisePopup.id = "exercisePopup";
-
-//     exercisePopup.style.position = "fixed";
-//     exercisePopup.style.fontFamily = "'Poppins', sans-serif";
-//     exercisePopup.style.top = '50%'; // Adjust Y position
-//     exercisePopup.style.left = '50%'; // Adjust X position
-//     exercisePopup.style.transform = "translate(-50%, -50%)";
-//     exercisePopup.style.background = "white";
-//     exercisePopup.style.border = "1px solid black";
-//     exercisePopup.style.padding = "20px";
-//     exercisePopup.style.zIndex = "9999";
-
-//     // Add buttons
-//     exercisePopup.innerHTML = `
-//       <button class="closePopup" style="text-align: end;">X</button>
-//       <button id="exercise-btn">Test your understanding</button>
-//     `;
-
-//     // Append exercisePopup to body
-//     document.body.appendChild(exercisePopup);
-//     setTimeout(() => {
-//       document.getElementById("exercise-btn").addEventListener("click", () => {
-//         exercisePopup.remove()
-//       });
-//       document.querySelector(".closePopup").addEventListener("click", () => exercisePopup.remove());
-//     }, 100);
-//   }
-// })

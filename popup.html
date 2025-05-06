@@ -15,94 +15,17 @@
     </div>
     <hr>
     <br>
-    <div class="accordion">
-      <div class="item">
-        <div class="title">Language Level Setting</div>
-        <div id="lng-level" class="content" style="display: flex; justify-content: space-between;">
-          <p>my level:</p>
-          <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
-            <option value="A1">A1 (Beginner)</option>
-            <option value="A2">A2 (Elementary)</option>
-            <option value="B1">B1 (Intermediate)</option>
-            <option value="B2">B2 (Upper Intermediate)</option>
-            <option value="C1">C1 (Advanced)</option>
-            <option value="C2">C2 (Mastery)</option>
-          </select>
-          <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
-          <div id="toast-icon" style="
-            visibility: hidden;
-            min-width: 60px;
-            background-color: black;
-            color: white;
-            text-align: center;
-            border-radius: 8px;
-            padding: 4px 8px;
-            position: fixed;
-            z-index: 9999;
-            bottom: 85%;
-            left: 80%;
-            transform: translateX(-50%);
-            font-size: 14px;
-          ">
-            Saved!
-          </div>
-        </div>
-      </div>
-      <div class="item">
-        <div class="title">My Saved words</div>
-        <div id="vocab-div" class="content">
-          <div id="vocabList"></div>
-        </div>
-      </div>
-      <div class="item">
-        <div class="title">My practice</div>
-        <div class="content" id="practice-interest">
-          <button id="practice">Practice now</button>
-        </div>
-      </div>
-      <div class="item">
-        <div class="title">Care to Share More?</div>
-        <div class="content" id="pin-popup">
-          <textarea name="feedback" rows="5" id="inputText" placeholder="What would you like to tell us?" style="width: 250px;"></textarea>
-          <br>
-          <button id="feedbackBtn" style="margin-top: 5px; margin-left: 200px;">Send</button>
-          <div id="toast-feedback" style="
-            visibility: hidden;
-            min-width: 60px;
-            background-color: black;
-            color: white;
-            text-align: center;
-            border-radius: 8px;
-            padding: 4px 8px;
-            position: fixed;
-            z-index: 9999;
-            bottom: 20%;
-            left: 80%;
-            transform: translateX(-50%);
-            font-size: 14px;
-          ">
-            Sent!
-          </div>
-        </div>
-      </div>
-      <br>
-      <a href="#" style="color: black;">Log out</a>
-      <br><br>
-    </div>
-
-
-    <!-- <div id="pin-popup">
-      <input type="text" id="inputText" placeholder="Enter word to be translated">
-      <button id="translateBtn">Translate</button>
-      <p id="output"></p>
-      <hr>
-      <br>
-    </div> -->
+    <div id="popup-root"></div>
   </body>
 </html>
 <style>
   body {
     min-width: 200px;
+  }
+
+  #vocabList {
+    max-height: 300px;
+    overflow: scroll;
   }
 
   #pin-popup, #lng-level {

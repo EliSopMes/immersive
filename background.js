@@ -34,6 +34,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       url: 'popup_options.html'
     })
   }
+  if (message.type === "OPEN_LOGIN_POPUP") {
+    chrome.windows.create({
+      url: chrome.runtime.getURL("popup.html"),
+      type: "popup",
+      width: 400,
+      height: 600
+    });
+  }
 });
 
 async function translateText(text) {

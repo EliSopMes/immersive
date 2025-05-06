@@ -1,43 +1,144 @@
 let isSpeaking = false;
 
- document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.accordion .title').forEach(title => {
-      title.addEventListener('click', () => {
-        const item = title.parentElement;
-        const content = item.querySelector('.content');
-        item.classList.toggle('open');
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.storage.local.get(["supabaseToken", "expires_at"], async ({ supabaseToken, expires_at }) => {
+    const root = document.getElementById("popup-root");
 
-        if (item.querySelector('#vocab-div') && item.classList.contains('open')) {
-          console.log("hello")
-          renderVocabList();
-        }
+    const isExpired = expires_at && Date.now() / 1000 > expires_at;
+
+    if (!supabaseToken || isExpired) {
+      // Show login UI
+      root.innerHTML = `
+        <div>
+          <h3>You're logged out</h3>
+          <form id="login-form">
+            <input type="email" id="email" placeholder="Email" required />
+            <input type="password" id="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+          </form>
+        </div>
+      `;
+      document.getElementById("login-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        const res = await fetch("https://immersive-server.netlify.app/.netlify/functions/authenticate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task: "login", email, password }),
+        });
+
+        const { token, refreshToken, expiration } = await res.json();
+        chrome.storage.local.set({ supabaseToken: token, refreshToken: refreshToken, expires_at: expiration }, () => {
+          window.location.reload();
+        });
       });
-    });
+    } else {
+      // Show main authenticated UI
+      root.innerHTML = `
+           <div class="accordion">
+            <div class="item">
+              <div class="title">Language Level Setting</div>
+              <div id="lng-level" class="content" style="display: flex; justify-content: space-between;">
+                <p>my level:</p>
+                <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
+                  <option value="A1">A1 (Beginner)</option>
+                  <option value="A2">A2 (Elementary)</option>
+                  <option value="B1">B1 (Intermediate)</option>
+                  <option value="B2">B2 (Upper Intermediate)</option>
+                  <option value="C1">C1 (Advanced)</option>
+                  <option value="C2">C2 (Mastery)</option>
+                </select>
+                <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
+                <div id="toast-icon" style="
+                  visibility: hidden;
+                  min-width: 60px;
+                  background-color: black;
+                  color: white;
+                  text-align: center;
+                  border-radius: 8px;
+                  padding: 4px 8px;
+                  position: fixed;
+                  z-index: 9999;
+                  bottom: 85%;
+                  left: 80%;
+                  transform: translateX(-50%);
+                  font-size: 14px;
+                ">
+                  Saved!
+                </div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="title">My Saved words</div>
+              <div id="vocab-div" class="content">
+                <div id="vocabList"></div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="title">My practice</div>
+              <div class="content" id="practice-interest">
+                <button id="practice">Practice now</button>
+              </div>
+            </div>
+            <div class="item">
+              <div class="title">Care to Share More?</div>
+              <div class="content" id="pin-popup">
+                <textarea name="feedback" rows="5" id="inputText" placeholder="What would you like to tell us?" style="width: 250px;"></textarea>
+                <br>
+                <button id="feedbackBtn" style="margin-top: 5px; margin-left: 200px;">Send</button>
+                <div id="toast-feedback" style="
+                  visibility: hidden;
+                  min-width: 60px;
+                  background-color: black;
+                  color: white;
+                  text-align: center;
+                  border-radius: 8px;
+                  padding: 4px 8px;
+                  position: fixed;
+                  z-index: 9999;
+                  bottom: 30%;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  font-size: 14px;
+                ">
+                  Sent! Thank you :)
+                </div>
+              </div>
+            </div>
+            <br>
+            <a href="#" id="logoutBtn" style="color: black;">Log out</a>
+            <br><br>
+          </div>
+      `;
 
-  //  document.getElementById("translateBtn").addEventListener("click", async () => {
-  //     let text = document.getElementById("inputText").value;
-  //     if (!text) return;
-  //     fetch("https://immersive-server.netlify.app/.netlify/functions/translate", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ text: text })
-  //     })
-  //     .then(res => res.json())
-  //     .then(data => {
-  //       const translation = data.translated;
-  //       if (translation) {
-  //         document.getElementById("output").textContent = translation;
-  //         chrome.storage.local.get("vocabulary_list", (data) => {
-  //           let vocabulary_list = data.vocabulary_list || [];
-  //           vocabulary_list.push([text, translation]);
-  //           chrome.storage.local.set({ vocabulary_list });
-  //         });
-  //       } else {
-  //         console.log('oh noooooo');
-  //       }
-  //     })
-  //   });
+      const logoutBtn = document.getElementById('logoutBtn')
+      logoutBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        chrome.storage.local.remove(["supabaseToken","refreshToken", "expires_at"],
+          function () {
+            if (chrome.runtime.lastError) {
+              console.error("Error removing tokens:", chrome.runtime.lastError);
+            } else {
+              console.log("Tokens removed successfully.");
+            }
+          }
+        )
+      })
+      document.querySelectorAll('.accordion .title').forEach(title => {
+        title.addEventListener('click', () => {
+          const item = title.parentElement;
+          item.classList.toggle('open');
 
+          if (item.querySelector('#vocab-div') && item.classList.contains('open')) {
+            renderVocabList();
+          }
+        });
+      });
+    }
+  });
+  
     const levelSet = document.getElementById('levels')
     chrome.storage.local.get("language_level", (data) => {
       const level = data.language_level || 'A2';
@@ -105,61 +206,88 @@ let isSpeaking = false;
       toast.style.visibility = "visible";
       setTimeout(() => {
         toast.style.visibility = "hidden";
-      }, 1000);
+      }, 3000);
     })
 
     function renderVocabList() {
       const vocabListHtml = document.getElementById("vocabList");
-
-      chrome.storage.local.get("vocabulary_list", (data) => {
-        let vocabList = data.vocabulary_list || [];
-        if (vocabList.length > 0) {
-          vocabListHtml.innerHTML = '';
-          vocabList.forEach((vocab, index) => {
-            const vocabListItem = `<div id='list-item-${index}' class="vocab-card">
-                            <div style="display: flex; justify-content: space-between;">
-                              <p>${vocab[0]}</p>
-                              <div style="display: flex;">
-                                <img height="16" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-                                <img height="14" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
-                              </div>
-                            </div>
-                            <p>${vocab[1]}</p>
-                          </div>`
-            vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
-
-            setTimeout(() => {
-              const deleteButton = document.getElementById(`vocab-${index}`)
-              deleteButton.addEventListener('click', (event) => {
-                event.preventDefault();
-                const index = vocabList.indexOf(vocab);
-                vocabList.splice(index, 1);
-                chrome.storage.local.set({ vocabulary_list: vocabList})
-                const domElement = document.getElementById(`list-item-${index}`)
-                domElement.remove();
-              })
-              const audioButton = document.getElementById(`btn-audio-${index}`)
-              audioButton.addEventListener('click', (event) => {
-                if (isSpeaking) {
-                  window.speechSynthesis.cancel(); // Stop speech if already speaking
-                  isSpeaking = false;
-                } else {
-                  const utterance = new SpeechSynthesisUtterance(vocab[0]);
-                  utterance.lang = 'de'; // Set language code (e.g., "de" for German, "en" for English)
-                  utterance.onend = () => {
-                    isSpeaking = false; // Reset when done
-                  };
-                  window.speechSynthesis.speak(utterance);
-                  isSpeaking = true;
-                }
-              })
-            }, 0);
-          })
-        } else {
-          vocabListHtml.innerHTML = "<div>You haven't saved any vocabulary yet.</div>";
+      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+        if (!supabaseToken) {
+          console.log('no token')
+          return;
         }
-        vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
-      });
+        fetch("https://immersive-server.netlify.app/.netlify/functions/fetch_vocab", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+          body: JSON.stringify({ message: 'user wants vocab' })
+        })
+        .then(res => res.json())
+        .then(data => {
+          let yourDate = new Date()
+          let firstAfter = 0
+          vocabListHtml.innerHTML = '';
+          let vocabList = data.saved_words || [];
+
+          if (vocabList.length > 0) {
+            vocabList.forEach((vocab, index) => {
+              if (vocab.created_at.split('T')[0] !==  yourDate.toISOString().split('T')[0]) {
+                firstAfter += 1
+              }
+              const vocabListItem = `<div id='list-item-${index}' class="vocab-card">
+                                            <div style="display: flex; justify-content: space-between;">
+                                              <p>${vocab.original_word} (${vocab.word_type})</p>
+                                              <div style="display: flex;">
+                                                <img height="16" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+                                                <img height="14" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
+                                              </div>
+                                            </div>
+                                            <p>${vocab.translated_word}</p>
+                                          </div>`
+
+              if (vocab.created_at.split('T')[0] ===  yourDate.toISOString().split('T')[0] && index === 0) {
+                vocabListHtml.insertAdjacentHTML("afterbegin", '<p>Today</p>')
+              } else if (vocab.created_at.split('T')[0] !==  yourDate.toISOString().split('T')[0] && firstAfter === 1) {
+                vocabListHtml.insertAdjacentHTML("beforeend", '<p>Last 7 days</p>')
+              }
+
+              vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
+
+              setTimeout(() => {
+                const deleteButton = document.getElementById(`vocab-${index}`)
+                deleteButton.addEventListener('click', (event) => {
+                  event.preventDefault();
+                  const index = vocabList.indexOf(vocab);
+                  vocabList.splice(index, 1);
+                  chrome.storage.local.set({ vocabulary_list: vocabList})
+                  const domElement = document.getElementById(`list-item-${index}`)
+                  domElement.remove();
+                })
+                const audioButton = document.getElementById(`btn-audio-${index}`)
+                audioButton.addEventListener('click', (event) => {
+                  if (isSpeaking) {
+                    window.speechSynthesis.cancel(); // Stop speech if already speaking
+                    isSpeaking = false;
+                  } else {
+                    const utterance = new SpeechSynthesisUtterance(vocab[0]);
+                    utterance.lang = 'de'; // Set language code (e.g., "de" for German, "en" for English)
+                    utterance.onend = () => {
+                      isSpeaking = false; // Reset when done
+                    };
+                    window.speechSynthesis.speak(utterance);
+                    isSpeaking = true;
+                  }
+                })
+              }, 0);
+            })
+          } else {
+            vocabListHtml.innerHTML = "<div>You haven't saved any vocabulary yet.</div>";
+          }
+          // vocabListHtml.insertAdjacentHTML("beforeend", `<button id="exportBtn">Export list</button>`)
+        })
+        .catch((err) => {
+          console.error("Fetch failed:", err);
+        });
+      })
     }
 
     const practiceBtn = document.getElementById('practice')
@@ -213,8 +341,6 @@ let isSpeaking = false;
 
           })
         }
-      } else {
-        console.log("here was display none")
       }
     });
  })
