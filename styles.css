@@ -90,6 +90,16 @@
   width: 100px;
 }
 
+#logged-out {
+  button {
+    background-color: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-family: "Poppins", sans-serif;
+  }
+}
+
 .loader {
   width: 25px;
   padding: 8px;

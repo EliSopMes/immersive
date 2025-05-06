@@ -40,6 +40,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       type: "popup",
       width: 400,
       height: 600
+    }, (win) => {
+      // Optional: store win.id if you want to close it from outside
+      console.log("Popup window ID:", win.id);
     });
   }
 });

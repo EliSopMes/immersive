@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!supabaseToken || isExpired) {
       // Show login UI
       root.innerHTML = `
-        <div>
-          <h3>You're logged out</h3>
+        <div id="logged-out">
+          <h4>You're logged out</h4>
           <form id="login-form">
             <input type="email" id="email" placeholder="Email" required />
             <input type="password" id="password" placeholder="Password" required />
@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </form>
         </div>
       `;
+      // <br><br>
+      // <p>or</p>
+      // <button id="googleLogin">Google Login</button>
       document.getElementById("login-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("email").value;
@@ -33,7 +36,30 @@ document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.local.set({ supabaseToken: token, refreshToken: refreshToken, expires_at: expiration }, () => {
           window.location.reload();
         });
+        if (token && refreshToken && expiration ) {
+          chrome.windows.getCurrent((win) => {
+            chrome.windows.remove(win.id);
+          });
+        }
       });
+      // document.getElementById("googleLogin").addEventListener("click", async (e) => {
+      //   e.preventDefault();
+      //   (async () => {
+      //     const { createClient } = await import('https://esm.sh/@supabase/supabase-js');
+      //     const supabase = createClient('https://gbxmuqfqwiehvsfwpouw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdieG11cWZxd2llaHZzZndwb3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTI3NTIsImV4cCI6MjA1OTkyODc1Mn0.J_aP5NqxbosSYiWpSujYt3tKskCTKJpqpvju_QZ9oQU";');
+
+      //     // Proceed with your logic, e.g., supabase.auth.signInWithOAuth({ ... })
+      //     const { data, error } = await supabase.auth.signInWithOAuth({
+      //       provider: 'google',
+      //       options: {
+      //         redirectTo: `https://immersive-server.netlify.app/success.html`
+      //       }
+      //     });
+      //     if (error) {
+      //       console.error("Signup error:", error.message);
+      //     }
+      //   })();
+      // });
     } else {
       // Show main authenticated UI
       root.innerHTML = `
@@ -136,78 +162,101 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       });
+
+      const levelSet = document.getElementById('levels')
+      chrome.storage.local.get("language_level", (data) => {
+        const level = data.language_level || 'A2';
+        if (level) {
+          levelSet.value = level;
+        }
+      })
+
+      const levelBtn = document.getElementById('level-btn')
+      levelBtn.addEventListener("click", () => {
+        chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+          if (!supabaseToken) {
+            console.log('no token')
+            return;
+          }
+          fetch("https://immersive-server.netlify.app/.netlify/functions/update_level", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+            body: JSON.stringify({ level: levelSet.value })
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log(data)
+          })
+          .catch((err) => {
+            console.error("Fetch failed:", err);
+          });
+        })
+        chrome.storage.local.set({ language_level: levelSet.value });
+        const toast = document.getElementById('toast-icon');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 1000);
+      })
+
+      const feedbackBtn = document.getElementById('feedbackBtn')
+      feedbackBtn.addEventListener("click", () => {
+        const feedback = document.getElementById('inputText').value
+        if (feedback === "") {
+          return;
+        }
+        chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+          if (!supabaseToken) {
+            console.log('no token')
+            return;
+          }
+
+          fetch("https://immersive-server.netlify.app/.netlify/functions/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+            body: JSON.stringify({ feedback })
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log(data)
+            const feedbackBox = document.getElementById('inputText')
+            feedbackBox.value = ''
+          })
+          .catch((err) => {
+            console.error("Fetch failed:", err);
+          });
+        })
+        const toast = document.getElementById('toast-feedback');
+        toast.style.visibility = "visible";
+        setTimeout(() => {
+          toast.style.visibility = "hidden";
+        }, 3000);
+      })
+
+      const practiceBtn = document.getElementById('practice')
+      practiceBtn.addEventListener('click', () => {
+        chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+          if (!supabaseToken) {
+            console.log('no token')
+            return;
+          }
+          fetch("https://immersive-server.netlify.app/.netlify/functions/practice", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+            body: JSON.stringify({ message: 'user interested' })
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log(data)
+          })
+          .catch((err) => {
+            console.error("Fetch failed:", err);
+          });
+        })
+        document.getElementById('practice-interest').innerHTML = '<p>Launching soon ...</p>'
+      })
     }
   });
-  
-    const levelSet = document.getElementById('levels')
-    chrome.storage.local.get("language_level", (data) => {
-      const level = data.language_level || 'A2';
-      if (level) {
-        levelSet.value = level;
-      }
-    })
-
-    const levelBtn = document.getElementById('level-btn')
-    levelBtn.addEventListener("click", () => {
-      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
-        if (!supabaseToken) {
-          console.log('no token')
-          return;
-        }
-        fetch("https://immersive-server.netlify.app/.netlify/functions/update_level", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-          body: JSON.stringify({ level: levelSet.value })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log(data)
-        })
-        .catch((err) => {
-          console.error("Fetch failed:", err);
-        });
-      })
-      chrome.storage.local.set({ language_level: levelSet.value });
-      const toast = document.getElementById('toast-icon');
-      toast.style.visibility = "visible";
-      setTimeout(() => {
-        toast.style.visibility = "hidden";
-      }, 1000);
-    })
-
-    const feedbackBtn = document.getElementById('feedbackBtn')
-    feedbackBtn.addEventListener("click", () => {
-      const feedback = document.getElementById('inputText').value
-      if (feedback === "") {
-        return;
-      }
-      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
-        if (!supabaseToken) {
-          console.log('no token')
-          return;
-        }
-
-        fetch("https://immersive-server.netlify.app/.netlify/functions/feedback", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-          body: JSON.stringify({ feedback })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log(data)
-          const feedbackBox = document.getElementById('inputText')
-          feedbackBox.value = ''
-        })
-        .catch((err) => {
-          console.error("Fetch failed:", err);
-        });
-      })
-      const toast = document.getElementById('toast-feedback');
-      toast.style.visibility = "visible";
-      setTimeout(() => {
-        toast.style.visibility = "hidden";
-      }, 3000);
-    })
 
     function renderVocabList() {
       const vocabListHtml = document.getElementById("vocabList");
@@ -289,29 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
     }
-
-    const practiceBtn = document.getElementById('practice')
-    practiceBtn.addEventListener('click', () => {
-      chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
-        if (!supabaseToken) {
-          console.log('no token')
-          return;
-        }
-        fetch("https://immersive-server.netlify.app/.netlify/functions/practice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
-          body: JSON.stringify({ message: 'user interested' })
-        })
-        .then(res => res.json())
-        .then(data => {
-          console.log(data)
-        })
-        .catch((err) => {
-          console.error("Fetch failed:", err);
-        });
-      })
-      document.getElementById('practice-interest').innerHTML = '<p>Launching soon ...</p>'
-    })
 
     const vocabListDiv = document.getElementById('vocab-div')
     chrome.storage.local.get("vocabulary_list", (data) => {

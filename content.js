@@ -80,9 +80,9 @@ function createPopup(selectedText, number_of_highlighted_words) {
 
     if (!supabaseToken || isExpired) {
       popup.innerHTML = `
-        <div>
-          <h3>You're logged out</h3>
-          <button id="loginBtn">Log In</button>
+        <div id="logged-out">
+          <h4>You're logged out</h4>
+          <button id="loginBtn" style="">Log In</button>
         </div>
       `;
     } else {
