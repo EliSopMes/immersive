@@ -80,24 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="item">
               <div class="title">Language Level Setting</div>
               <div id="lng-level" class="content" style="display: flex; justify-content: space-between;">
-                <p>my level:</p>
-                <select name="levels" id="levels" style="height: 30px; margin-top: 10px;">
+                <p style="padding-top: 3px; font-size: 14px;">my level: </p>
+                <select name="levels" id="levels">
                   <option value="A1">A1 (Beginner)</option>
                   <option value="A2">A2 (Elementary)</option>
                   <option value="B1">B1 (Intermediate)</option>
                   <option value="B2">B2 (Upper Intermediate)</option>
                   <option value="C1">C1 (Advanced)</option>
-                  <option value="C2">C2 (Mastery)</option>
                 </select>
-                <button id="level-btn" style="height: 30px; margin-top: 10px;">save</button>
+                <button id="level-btn">save</button>
                 <div id="toast-icon" style="
                   visibility: hidden;
-                  min-width: 60px;
-                  background-color: black;
-                  color: white;
+                  background-color: #FFDB58;
+                  color: black;
                   text-align: center;
-                  border-radius: 8px;
-                  padding: 4px 8px;
+                  border-radius: 4px;
+                  padding: 4px 10px;
                   position: fixed;
                   z-index: 9999;
                   bottom: 85%;
@@ -141,9 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   left: 50%;
                   transform: translateX(-50%);
                   font-size: 14px;
-                ">
-                  Sent! Thank you :)
-                </div>
+                "></div>
               </div>
             </div>
             <br>
@@ -228,6 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
       feedbackBtn.addEventListener("click", () => {
         const feedback = document.getElementById('inputText').value
         if (feedback === "") {
+          const toast = document.getElementById('toast-feedback');
+          toast.innerText = "Please write something."
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 3000);
           return;
         }
         chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
@@ -252,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         })
         const toast = document.getElementById('toast-feedback');
+        toast.innerText = "Sent! Thank you :)"
         toast.style.visibility = "visible";
         setTimeout(() => {
           toast.style.visibility = "hidden";
@@ -297,6 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(res => res.json())
         .then(data => {
+          console.log(data)
           let yourDate = new Date()
           let firstAfter = 0
           vocabListHtml.innerHTML = '';
@@ -335,6 +339,25 @@ document.addEventListener('DOMContentLoaded', () => {
                   chrome.storage.local.set({ vocabulary_list: vocabList})
                   const domElement = document.getElementById(`list-item-${index}`)
                   domElement.remove();
+                  const original_word = vocab.original_word
+                  chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
+                    if (!supabaseToken) {
+                      console.log('no token')
+                      return;
+                    }
+                    fetch(`https://immersive-server.netlify.app/.netlify/functions/delete_vocab`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseToken}`, },
+                      body: JSON.stringify({ original_word })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                      console.log(data)
+                    })
+                    .catch((err) => {
+                      console.error("Fetch failed:", err);
+                    });
+                  });
                 })
                 const audioButton = document.getElementById(`btn-audio-${index}`)
                 audioButton.addEventListener('click', (event) => {

@@ -39,12 +39,17 @@
     text-decoration: none;
   }
 
-  #pin-popup, #lng-level, #logged-out {
+  #pin-popup, #lng-level, #logged-out, #practice-interest {
     button {
-      background-color: black;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 8px;
+      background-color: #FFDB58;
+      color: black;
+      text-align: center;
+      border-radius: 4px;
+      border: 1px solid #FFDB58;
+      height: 30px;
+      padding: 4px 10px;
+      margin-top: 10px;
+      font-size: 14px;
       font-family: "Poppins", sans-serif;
     }
 
@@ -63,6 +68,21 @@
     border-radius: 6px;
     overflow: hidden;
     transition: all 0.3s ease;
+  }
+
+  .accordion .title:hover {
+    border: 1px solid #f4d154;
+    background-color: #FFDB58;
+  }
+
+  #levels {
+    height: 25px;
+    margin-top: 12px;
+    width: 130px;
+
+    option {
+      font-size: 14px;
+    }
   }
 
   .accordion .title {

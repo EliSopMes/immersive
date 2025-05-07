@@ -102,6 +102,8 @@ function createPopup(selectedText, number_of_highlighted_words) {
     // ✅ Ensure Event Listeners Work
     setTimeout(() => {
       document.getElementById("loginBtn")?.addEventListener("click", () => {
+        const existingPopup = document.getElementById("customPopup");
+        existingPopup.remove();
         chrome.runtime.sendMessage({ type: "OPEN_LOGIN_POPUP" });
       });
       document.getElementById("btn1").addEventListener("click", () => {
@@ -186,7 +188,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   choicePopup.style.border = "1px solid #D9D9D9";
   choicePopup.style.borderRadius = "8px";
   choicePopup.style.padding = "8px 12px";
-  choicePopup.style.zIndex = "9999";
+  choicePopup.style.zIndex = "9000";
   choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
   choicePopup.innerHTML = `
     <div id="choicePopup">
@@ -211,7 +213,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   }, 100);
 
 
-  chrome.storage.local.get(["supabaseToken", "expires_at"] , async ({ supabaseToken, expires_at }) =>  {
+  chrome.storage.local.get("supabaseToken" , async ({ supabaseToken }) =>  {
     if (!supabaseToken) {
       console.log('no token')
       return;
@@ -219,23 +221,35 @@ function simplify(selectedText, level, number_of_highlighted_words) {
 
     const taskToDo = number_of_highlighted_words <= 3 ? 'define' : 'simplify';
     const makeRequest = async (token) => {
-      const res = await fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
-        body: JSON.stringify({ text: selectedText, level })
-      });
-      if (res.status === 401) {
-        console.log("Unauthorized");
-        throw new Error("Unauthorized");
+      try {
+        const res = await fetch(`https://immersive-server.netlify.app/.netlify/functions/${taskToDo}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+          body: JSON.stringify({ text: selectedText, level })
+        });
+        if (!res.ok) {
+          // If status is not ok, parse the error
+          const errorData = await res.json();
+          console.error("Request failed:", errorData.error);
+          throw new Error(errorData.error || "Request failed");
+        }
+        const data = await res.json();
+        return data;
+      } catch (error) {
+        console.error("Fetch error:", error.message);
+        // Optional: Display the error message to the user
+        alert(`Error: ${error.message}`);
+        return null;
       }
-
-      return res.json();
     };
 
     try {
       const data = await makeRequest(supabaseToken);
+      if (data && data.error) {
+        // Handling custom error messages
+        alert(`Server Error: ${data.error}`);
+      }
       const simplified = taskToDo === "define" ? JSON.parse(data.simplified) : data.simplified;
-
       const synonyms = simplified.synonyms ? `<strong><p>Synonyme</p></strong><ul style="list-style-type:disc;"> ${simplified.synonyms.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
       const examples = simplified.examples ? `<strong><p>Beispiele</p></strong><ul style="list-style-type:disc;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
       innerDefine =  `<div id="choicePopup">
@@ -251,8 +265,12 @@ function simplify(selectedText, level, number_of_highlighted_words) {
           ${synonyms ? synonyms : ""}
           <br>
           ${examples ? examples : ""}
-          <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
+          <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
             <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+             <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
+              </div>
             <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
             <div id="toast-copy">
               Saved to clipboard!
@@ -296,11 +314,20 @@ function simplify(selectedText, level, number_of_highlighted_words) {
             toast.style.visibility = "hidden";
           }, 1000);
         });
+        document.getElementById("btn-vocab").addEventListener("click", () => {
+          const germanWord = simplified.article ? `${simplified.article} ${selectedText}` : selectedText
+          save_vocabulary(germanWord, simplified.translation, simplified.word_type)
+          const toast = document.getElementById('toast');
+          toast.style.visibility = "visible";
+          setTimeout(() => {
+            toast.style.visibility = "hidden";
+          }, 1000);
+        });
         document.getElementById("btn-translate").addEventListener("click", () => {
           translate_from_simplified(selectedText, number_of_highlighted_words);
         });
         document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
-          const isInsidePopup = event.target.closest("#choice-text");
+          const isInsidePopup = event.target.closest("#choice-popup-styling");
           if (isInsidePopup) return;
           let selectedText = window.getSelection().toString().trim();
           let number_highlighted_words = selectedText.split(/\s+/).length;
@@ -309,7 +336,8 @@ function simplify(selectedText, level, number_of_highlighted_words) {
           }
         });
         document.getElementById("btn-audio").addEventListener("click", () => {
-          pronounce(simplified, 'de');
+          const toBePronounced = taskToDo === "define" ? selectedText : simplified;
+          pronounce(toBePronounced, 'de');
         });
         document.querySelector(".closePopup").addEventListener("click", () => {
           choicePopup.remove();
@@ -464,7 +492,10 @@ function translateGPT(selectedText, number_of_highlighted_words) {
         });
         document.getElementById("btn-simple").addEventListener("click", () => {
           chrome.storage.local.get("language_level" , (data) => {
-            const level = data.language_level || 'A2';
+            const level = data.language_level || 'no level';
+            if (level === 'no level') {
+              console.log("hellooo")
+            }
             simplify(selectedText, level, number_of_highlighted_words);
           })
         });
