@@ -323,9 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                           </div>`
 
               if (vocab.created_at.split('T')[0] ===  yourDate.toISOString().split('T')[0] && index === 0) {
-                vocabListHtml.insertAdjacentHTML("afterbegin", '<p>Today</p>')
+                vocabListHtml.insertAdjacentHTML("afterbegin", '<p id="today">Today</p>')
               } else if (vocab.created_at.split('T')[0] !==  yourDate.toISOString().split('T')[0] && firstAfter === 1) {
-                vocabListHtml.insertAdjacentHTML("beforeend", '<p>Last 7 days</p>')
+                vocabListHtml.insertAdjacentHTML("beforeend", '<p id="seven">Last 7 days</p>')
               }
 
               vocabListHtml.insertAdjacentHTML("beforeend", vocabListItem)
@@ -334,11 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const deleteButton = document.getElementById(`vocab-${index}`)
                 deleteButton.addEventListener('click', (event) => {
                   event.preventDefault();
-                  const index = vocabList.indexOf(vocab);
-                  vocabList.splice(index, 1);
-                  chrome.storage.local.set({ vocabulary_list: vocabList})
-                  const domElement = document.getElementById(`list-item-${index}`)
-                  domElement.remove();
+
                   const original_word = vocab.original_word
                   chrome.storage.local.get("supabaseToken" , ({ supabaseToken }) => {
                     if (!supabaseToken) {
@@ -358,6 +354,16 @@ document.addEventListener('DOMContentLoaded', () => {
                       console.error("Fetch failed:", err);
                     });
                   });
+                  const indexList = vocabList.indexOf(vocab.original_word);
+                  const domElement = document.getElementById(`list-item-${index}`)
+                  console.log(domElement)
+                  domElement.remove();
+                  vocabList.splice(indexList, 1);
+                  chrome.storage.local.set({ vocabulary_list: vocabList})
+                  const vocabCardsCount = document.querySelectorAll("#vocabList .vocab-card").length;
+                  if (vocabCardsCount === 0) {
+                    vocabListHtml.innerHTML = "<div>You haven't saved any vocabulary yet.</div>"
+                  }
                 })
                 const audioButton = document.getElementById(`btn-audio-${index}`)
                 audioButton.addEventListener('click', (event) => {

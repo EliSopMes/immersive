@@ -373,6 +373,9 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       window.addEventListener("scroll", handleScroll);
     } catch (err) {
       console.error("Fetch failed:", err);
+      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
+                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                               <p>${err}</p>`
     }
   });
 }
@@ -537,6 +540,9 @@ function translateGPT(selectedText, number_of_highlighted_words) {
     })
     .catch((err) => {
       console.error("Fetch failed:", err);
+      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
+                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                               <p>${err}</p>`
     });
   });
 }
@@ -639,6 +645,9 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
     })
     .catch((err) => {
       console.error("Fetch failed:", err);
+      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
+                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                               <p>${err}</p>`
     });
   });
 }
@@ -677,6 +686,9 @@ function save_vocabulary(original_word, translated_word, word_type) {
     })
     .catch((err) => {
       console.error("Fetch failed:", err);
+      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
+                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                               <p>${err}</p>`
     });
   });
 }
