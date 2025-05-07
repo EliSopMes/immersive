@@ -503,10 +503,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
         });
         document.getElementById("btn-simple").addEventListener("click", () => {
           chrome.storage.local.get("language_level" , (data) => {
-            const level = data.language_level || 'no level';
-            if (level === 'no level') {
-              console.log("hellooo")
-            }
+            const level = data.language_level || 'A2';
             simplify(selectedText, level, number_of_highlighted_words);
           })
         });
