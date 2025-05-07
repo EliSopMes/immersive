@@ -43,6 +43,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }, (win) => {
       // Optional: store win.id if you want to close it from outside
       console.log("Popup window ID:", win.id);
+      const winId = win.id
+      chrome.storage.local.set({
+        winId: winId,
+      });
     });
   }
 });

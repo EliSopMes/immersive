@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
       root.innerHTML = `
         <div id="logged-out">
           <h4>You're logged out</h4>
+          <p id="error-msg" style="display:none; color: red;"></p>
           <form id="login-form">
             <input type="email" id="email" placeholder="Email" required />
             <input type="password" id="password" placeholder="Password" required />
@@ -32,14 +33,23 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ task: "login", email, password }),
         });
-
-        const { token, refreshToken, expiration } = await res.json();
-        chrome.storage.local.set({ supabaseToken: token, refreshToken: refreshToken, expires_at: expiration }, () => {
-          window.location.reload();
-        });
-        if (token && refreshToken && expiration ) {
-          chrome.windows.getCurrent((win) => {
-            chrome.windows.remove(win.id);
+        const respone = await res.json();
+        if (respone.error) {
+          const errorMsg = document.getElementById('error-msg')
+          errorMsg.innerText = respone.error
+          errorMsg.style.display = 'block'
+        } else {
+          const { token, refreshToken, expiration } = respone;
+          chrome.storage.local.set({ supabaseToken: token, refreshToken: refreshToken, expires_at: expiration }, () => {
+            chrome.storage.local.get("winId", (data) => {
+              const winId = data.winId || 'none';
+              if (winId !== 'none') {
+                chrome.windows.remove(winId);
+                chrome.storage.local.remove("winId")
+              }
+            })
+            // console.log(window.location)
+            window.location.reload();
           });
         }
       });
@@ -141,8 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       const logoutBtn = document.getElementById('logoutBtn')
-      logoutBtn.addEventListener('click', (event) => {
-        event.preventDefault();
+      logoutBtn.addEventListener('click', () => {
         chrome.storage.local.remove(["supabaseToken","refreshToken", "expires_at"],
           function () {
             if (chrome.runtime.lastError) {
@@ -152,6 +161,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
         )
+        root.innerHTML = `
+          <div id="logged-out">
+            <h4>You're logged out</h4>
+            <form id="login-form">
+              <input type="email" id="email" placeholder="Email" required />
+              <input type="password" id="password" placeholder="Password" required />
+              <button type="submit">Login</button>
+            </form>
+            <p>or</p>
+            <a id="googleSignin" href="https://immersive-server.netlify.app/signin" target="_blank">Google Login</a>
+            <br><br>
+          </div>
+        `;
       })
       document.querySelectorAll('.accordion .title').forEach(title => {
         title.addEventListener('click', () => {
