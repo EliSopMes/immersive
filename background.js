@@ -5,6 +5,13 @@ chrome.action.onClicked.addListener((tab) => {
   });
 });
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.tabs.create({
+    url: "https://immersive-server.netlify.app/"
+  });
+});
+
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'translate') {
     translateText(request.text)
