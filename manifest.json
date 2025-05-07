@@ -1,16 +1,15 @@
 {
-  "name": "Join Immersive",
-  "description": "Read German easily as you browse the internet with Immersive Language Learning",
-  "version": "1.0",
-  "icons": {
-    "16": "default_icon.png",
-    "48": "default_icon.png",
-    "128": "default_icon.png"
-  },
   "manifest_version": 3,
-  "permissions": ["storage", "activeTab", "scripting"],
+  "name": "Join Immersive",
+  "version": "1.0",
+  "description": "Read German easily as you browse the internet with Immersive Language Learning",
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
   "background": {
     "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "default_icon.png"
   },
   "web_accessible_resources": [
     {
@@ -18,19 +17,9 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["styles.css"]
-    }
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "default_icon.png",
-      "48": "default_icon.png",
-      "128": "default_icon.png"
-    }
+  "icons": {
+    "16": "default_icon.png",
+    "48": "default_icon.png",
+    "128": "default_icon.png"
   }
 }

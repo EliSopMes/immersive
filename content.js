@@ -1,7 +1,6 @@
 let vocabulary_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
-
 window.addEventListener("message", (event) => {
   // SECURITY: verify the origin
   // if (event.origin !== "http://127.0.0.1:5500") return;
@@ -28,6 +27,7 @@ window.addEventListener("message", (event) => {
 });
 
 document.addEventListener('mouseup', function (event) {
+  console.log("hello")
   const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
   if (isInsidePopup) return;
   let selectedText = window.getSelection().toString().trim();
@@ -268,7 +268,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
           ${examples ? examples : ""}
           <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
             <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-             <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/vocab-icon.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
               <div id="toast">
                 Saved!
               </div>
@@ -378,8 +378,8 @@ function simplify(selectedText, level, number_of_highlighted_words) {
                                   <button class="closePopup">X</button>
                                 </div>
                                 <p>Please try again later.</p>
-                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
-                               <p>${err}</p>`
+                                <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                                <p>${err}</p>`
       setTimeout(() => {
         document.querySelector(".closePopup").addEventListener("click", () => {
           choicePopup.remove();

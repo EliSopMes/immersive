@@ -1,9 +1,36 @@
-chrome.action.onClicked.addListener((tab) => {
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    files: ["content.js"]
+console.log("🚀 Service Worker Loaded!");
+
+// Create a context menu option
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "activateExtension",
+    title: "Activate Immersive Extension",
+    contexts: ["page"]
   });
 });
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === "activateExtension") {
+    console.log("🌟 Context menu clicked!");
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content.js"]
+      });
+      console.log("✅ content.js injected successfully.");
+
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ["styles.css"]
+      });
+      console.log("✅ styles.css injected successfully.");
+    } catch (error) {
+      console.error("❌ Failed to inject script or styles:", error);
+    }
+  }
+});
+
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.tabs.create({
