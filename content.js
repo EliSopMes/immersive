@@ -106,19 +106,19 @@ function createPopup(selectedText, number_of_highlighted_words) {
         existingPopup.remove();
         chrome.runtime.sendMessage({ type: "OPEN_LOGIN_POPUP" });
       });
-      document.getElementById("btn1").addEventListener("click", () => {
+      document.getElementById("btn1")?.addEventListener("click", () => {
         translateGPT(selectedText, number_of_highlighted_words);
         // translate(selectedText, number_of_highlighted_words);
         popup.remove();
       });
-      document.getElementById("btn2").addEventListener("click", () => {
+      document.getElementById("btn2")?.addEventListener("click", () => {
         chrome.storage.local.get("language_level" , (data) => {
           const level = data.language_level || 'A2';
           simplify(selectedText, level, number_of_highlighted_words);
           popup.remove();
         })
       });
-      document.getElementById("btn3").addEventListener("click", (event) => {
+      document.getElementById("btn3")?.addEventListener("click", (event) => {
         if (event.target.innerHTML === 'pause') {
           event.target.innerHTML = "pronounce"
         } else {
@@ -314,7 +314,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
+        document.getElementById("btn-vocab")?.addEventListener("click", () => {
           const germanWord = simplified.article ? `${simplified.article} ${selectedText}` : selectedText
           save_vocabulary(germanWord, simplified.translation, simplified.word_type)
           const toast = document.getElementById('toast');
@@ -492,7 +492,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
+        document.getElementById("btn-vocab")?.addEventListener("click", () => {
           const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
           save_vocabulary(germanWord, translation.translation, translation.word_type)
           const toast = document.getElementById('toast');
@@ -501,7 +501,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-simple").addEventListener("click", () => {
+        document.getElementById("btn-simple")?.addEventListener("click", () => {
           chrome.storage.local.get("language_level" , (data) => {
             const level = data.language_level || 'A2';
             simplify(selectedText, level, number_of_highlighted_words);
@@ -642,7 +642,7 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-vocab").addEventListener("click", () => {
+        document.getElementById("btn-vocab")?.addEventListener("click", () => {
           const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
           save_vocabulary(germanWord, translation.translation, translation.word_type)
           const toast = document.getElementById('toast');
