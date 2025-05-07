@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
       root.innerHTML = `
         <div id="logged-out">
           <h4>You're logged out</h4>
+          <a href="https://immersive-server.netlify.app" target="_blank">Don't have an account yet?</a>
+          <br><br>
           <p id="error-msg" style="display:none; color: red;"></p>
           <form id="login-form">
             <input type="email" id="email" placeholder="Email" required />
