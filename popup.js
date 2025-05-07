@@ -16,10 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <input type="password" id="password" placeholder="Password" required />
             <button type="submit">Login</button>
           </form>
+          <p>or</p>
+          <a id="googleSignin" href="https://immersive-server.netlify.app/signin" target="_blank">Google Login</a>
+          <br><br>
         </div>
       `;
-      // <br><br>
-      // <p>or</p>
       // <button id="googleLogin">Google Login</button>
       document.getElementById("login-form").addEventListener("submit", async (e) => {
         e.preventDefault();
