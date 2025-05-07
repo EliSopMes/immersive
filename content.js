@@ -372,10 +372,18 @@ function simplify(selectedText, level, number_of_highlighted_words) {
       }, 0);
       window.addEventListener("scroll", handleScroll);
     } catch (err) {
-      console.error("Fetch failed:", err);
-      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
+      choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
+                                  <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
+                                  <button class="closePopup">X</button>
+                                </div>
+                                <p>Please try again later.</p>
                                <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
                                <p>${err}</p>`
+      setTimeout(() => {
+        document.querySelector(".closePopup").addEventListener("click", () => {
+          choicePopup.remove();
+        });
+      }, 100);
     }
   });
 }
@@ -539,10 +547,18 @@ function translateGPT(selectedText, number_of_highlighted_words) {
       window.addEventListener("scroll", handleScroll);
     })
     .catch((err) => {
-      console.error("Fetch failed:", err);
-      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
-                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
-                               <p>${err}</p>`
+      choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
+                                    <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
+                                    <button class="closePopup">X</button>
+                                  </div>
+                                  <p>Please try again later.</p>
+                                <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                                <p>${err}</p>`
+      setTimeout(() => {
+      document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+      });
+      }, 100);
     });
   });
 }
@@ -644,10 +660,18 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
       }, 100);
     })
     .catch((err) => {
-      console.error("Fetch failed:", err);
-      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
-                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
-                               <p>${err}</p>`
+      choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
+                                    <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
+                                    <button class="closePopup">X</button>
+                                  </div>
+                                  <p>Please try again later.</p>
+                                <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                                <p>${err}</p>`
+      setTimeout(() => {
+      document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+      });
+      }, 100);
     });
   });
 }
@@ -685,10 +709,18 @@ function save_vocabulary(original_word, translated_word, word_type) {
       console.log(data)
     })
     .catch((err) => {
-      console.error("Fetch failed:", err);
-      choicePopup.innerHTML = `<p>Fetch failed, please try again later.</p>
-                               <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
-                               <p>${err}</p>`
+      choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
+                                    <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
+                                    <button class="closePopup">X</button>
+                                  </div>
+                                  <p>Please try again later.</p>
+                                <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
+                                <p>${err}</p>`
+      setTimeout(() => {
+      document.querySelector(".closePopup").addEventListener("click", () => {
+      choicePopup.remove();
+      });
+      }, 100);
     });
   });
 }

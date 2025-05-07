@@ -50,29 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 chrome.storage.local.remove("winId")
               }
             })
-            // console.log(window.location)
             window.location.reload();
           });
         }
       });
-      // document.getElementById("googleLogin").addEventListener("click", async (e) => {
-      //   e.preventDefault();
-      //   (async () => {
-      //     const { createClient } = await import('https://esm.sh/@supabase/supabase-js');
-      //     const supabase = createClient('https://gbxmuqfqwiehvsfwpouw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdieG11cWZxd2llaHZzZndwb3V3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNTI3NTIsImV4cCI6MjA1OTkyODc1Mn0.J_aP5NqxbosSYiWpSujYt3tKskCTKJpqpvju_QZ9oQU";');
-
-      //     // Proceed with your logic, e.g., supabase.auth.signInWithOAuth({ ... })
-      //     const { data, error } = await supabase.auth.signInWithOAuth({
-      //       provider: 'google',
-      //       options: {
-      //         redirectTo: `https://immersive-server.netlify.app/success.html`
-      //       }
-      //     });
-      //     if (error) {
-      //       console.error("Signup error:", error.message);
-      //     }
-      //   })();
-      // });
     } else {
       // Show main authenticated UI
       root.innerHTML = `
@@ -154,8 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
           function () {
             if (chrome.runtime.lastError) {
               console.error("Error removing tokens:", chrome.runtime.lastError);
-            } else {
-              console.log("Tokens removed successfully.");
             }
           }
         )
