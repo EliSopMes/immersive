@@ -176,6 +176,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   choicePopup.style.position = "absolute";
   choicePopup.style.width = "305px";
   choicePopup.style.fontFamily = "'Poppins', sans-serif";
+  choicePopup.style.fontSize= "18px";
 
   const padding = 10;
   const desiredLeft = rect.right - 305;
@@ -403,6 +404,7 @@ function translateGPT(selectedText, number_of_highlighted_words) {
   choicePopup.style.position = "absolute";
   choicePopup.style.width = "305px";
   choicePopup.style.fontFamily = "'Poppins', sans-serif";
+  choicePopup.style.fontSize= "18px";
 
   const padding = 10;
   const desiredLeft = rect.right - 305;
