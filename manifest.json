@@ -3,7 +3,7 @@
   "name": "Join Immersive",
   "version": "1.0",
   "description": "Read German easily as you browse the internet with Immersive Language Learning",
-  "permissions": ["storage", "activeTab", "scripting", "contextMenus"],
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "tabs"],
   "background": {
     "service_worker": "background.js"
   },

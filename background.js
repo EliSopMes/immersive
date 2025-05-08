@@ -9,6 +9,24 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (
+    changeInfo.status === "complete" &&
+    tab.url
+  ) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ["content.js"],
+    });
+    console.log("✅ content.js injected on page load.");
+  } else {
+    console.log("⏳ Tab still loading or not the correct URL:");
+    console.log("Status:", changeInfo.status);
+    console.log("Tab ID:", tabId);
+    console.log("URL:", tab || "Not yet available");
+  }
+});
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "activateExtension") {
     console.log("🌟 Context menu clicked!");

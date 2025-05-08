@@ -2,6 +2,7 @@ let vocabulary_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
 window.addEventListener("message", (event) => {
+  console.log("helloooooo")
   // SECURITY: verify the origin
   // if (event.origin !== "http://127.0.0.1:5500") return;
   if (event.origin !== "https://immersive-server.netlify.app") return;
