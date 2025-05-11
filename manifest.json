@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Join Immersive",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Read German easily as you browse the internet with Immersive Language Learning",
   "permissions": ["storage", "activeTab", "scripting", "contextMenus", "tabs"],
   "host_permissions": [
