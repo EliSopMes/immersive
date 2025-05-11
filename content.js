@@ -2,7 +2,6 @@ let vocabulary_list = []
 let lastSelectedText = "";
 let isSpeaking = false;
 window.addEventListener("message", (event) => {
-  console.log("helloooooo")
   // SECURITY: verify the origin
   // if (event.origin !== "http://127.0.0.1:5500") return;
   if (event.origin !== "https://immersive-server.netlify.app") return;
@@ -28,7 +27,6 @@ window.addEventListener("message", (event) => {
 });
 
 document.addEventListener('mouseup', function (event) {
-  console.log("hello")
   const isInsidePopup = event.target.closest("#choicePopup") || event.target.closest(".simplified-popup");
   if (isInsidePopup) return;
   let selectedText = window.getSelection().toString().trim();

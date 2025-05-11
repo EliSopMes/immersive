@@ -4,6 +4,9 @@
   "version": "1.0",
   "description": "Read German easily as you browse the internet with Immersive Language Learning",
   "permissions": ["storage", "activeTab", "scripting", "contextMenus", "tabs"],
+  "host_permissions": [
+    "https://immersive-server.netlify.app/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },

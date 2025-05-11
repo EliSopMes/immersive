@@ -21,16 +21,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     console.log("✅ content.js injected on page load.");
   } else {
     console.log("⏳ Tab still loading or not the correct URL:");
-    console.log("Status:", changeInfo.status);
-    console.log("Tab ID:", tabId);
-    console.log("URL:", tab || "Not yet available");
   }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "activateExtension") {
-    console.log("🌟 Context menu clicked!");
-
     try {
       await chrome.scripting.executeScript({
         target: { tabId: tab.id },

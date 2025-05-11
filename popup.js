@@ -279,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(res => res.json())
         .then(data => {
-          console.log(data)
           let yourDate = new Date()
           let firstAfter = 0
           vocabListHtml.innerHTML = '';
@@ -335,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   });
                   const indexList = vocabList.indexOf(vocab.original_word);
                   const domElement = document.getElementById(`list-item-${index}`)
-                  console.log(domElement)
                   domElement.remove();
                   vocabList.splice(indexList, 1);
                   chrome.storage.local.set({ vocabulary_list: vocabList})
