@@ -18,6 +18,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       target: { tabId: tabId },
       files: ["content.js"],
     });
+    chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["styles.css"]
+    });
     console.log("✅ content.js injected on page load.");
   } else {
     console.log("⏳ Tab still loading or not the correct URL:");
