@@ -85,7 +85,7 @@ function createPopup(selectedText, number_of_highlighted_words) {
     } else {
       popup.innerHTML = `
         <div id="popup-styling" style="display: flex; justify-content: space-between;">
-          <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
+          <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" style="height:24px; margin-top:1.5px;" alt="simplify" title="simplify" class="context-icons">
           <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
           <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
           <button class="closePopup">X</button>
@@ -189,7 +189,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
   choicePopup.style.zIndex = "9000";
   choicePopup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
   choicePopup.innerHTML = `
-    <div id="choicePopup" style="padding: 2px 6px;">
+    <div id="choicePopup" style="padding: 2px 0px 2px 6px;">
       <div style="display: flex; justify-content: space-between;">
         <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
         <button class="closePopup">X</button>
@@ -270,7 +270,7 @@ function simplify(selectedText, level, number_of_highlighted_words) {
             <div id="toast-copy">
               Saved to clipboard!
             </div>
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
             <div id="toast">
               Saved!
             </div>
@@ -462,6 +462,12 @@ function translateGPT(selectedText, number_of_highlighted_words) {
             <p class="choice-text">Currently only available for translating from German to English</p>
           </div>
         `;
+        setTimeout(() => {
+          document.querySelector(".closePopup").addEventListener("click", () => {
+            choicePopup.remove();
+            cleanup();
+          });
+        }, 100);
       } else {
         const translation = JSON.parse(data.translated);
 
@@ -479,13 +485,13 @@ function translateGPT(selectedText, number_of_highlighted_words) {
             <p class="choice-text">${translation.translation}</p>
             <div id="choice-popup-styling" class="three" style="${number_of_highlighted_words === 1 ? "width: 100px" : ""}">
               <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-              <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" alt="simplify" title="simplify" class="context-icons">
+              <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" style="height: 20px; margin: 2px 2px 1px 6px;" alt="simplify" title="simplify" class="context-icons">
               <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
               <div id="toast-copy">
                 Saved to clipboard!
               </div>
-              <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-                <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div style="margin: 0px 0px 1px 2px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+                <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
                 <div id="toast">
                   Saved!
                 </div>
@@ -493,40 +499,40 @@ function translateGPT(selectedText, number_of_highlighted_words) {
             </div>
           </div>
         `;
+        setTimeout(() => {
+          document.getElementById("btn-copy")?.addEventListener("click", () => {
+            navigator.clipboard.writeText(translation.translation);
+            const toast = document.getElementById('toast-copy');
+            toast.style.visibility = "visible";
+            setTimeout(() => {
+              toast.style.visibility = "hidden";
+            }, 1000);
+          });
+          document.getElementById("btn-vocab")?.addEventListener("click", () => {
+            const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
+            save_vocabulary(germanWord, translation.translation, translation.word_type)
+            const toast = document.getElementById('toast');
+            toast.style.visibility = "visible";
+            setTimeout(() => {
+              toast.style.visibility = "hidden";
+            }, 1000);
+          });
+          document.getElementById("btn-simple")?.addEventListener("click", () => {
+            chrome.storage.local.get("language_level" , (data) => {
+              const level = data.language_level || 'A2';
+              simplify(selectedText, level, number_of_highlighted_words);
+            })
+          });
+          document.getElementById("btn-audio")?.addEventListener("click", () => {
+            pronounce(selectedText, 'de');
+          });
+          document.querySelector(".closePopup").addEventListener("click", () => {
+            choicePopup.remove();
+            cleanup();
+          });
+        }, 100);
       }
 
-      setTimeout(() => {
-        document.getElementById("btn-copy")?.addEventListener("click", () => {
-          navigator.clipboard.writeText(translation.translation);
-          const toast = document.getElementById('toast-copy');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-vocab")?.addEventListener("click", () => {
-          const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
-          save_vocabulary(germanWord, translation.translation, translation.word_type)
-          const toast = document.getElementById('toast');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-simple")?.addEventListener("click", () => {
-          chrome.storage.local.get("language_level" , (data) => {
-            const level = data.language_level || 'A2';
-            simplify(selectedText, level, number_of_highlighted_words);
-          })
-        });
-        document.getElementById("btn-audio")?.addEventListener("click", () => {
-          pronounce(selectedText, 'de');
-        });
-        document.querySelector(".closePopup").addEventListener("click", () => {
-          choicePopup.remove();
-          cleanup();
-        });
-      }, 100);
 
       function cleanup() {
         document.removeEventListener("click", handleOutsideClick);
@@ -556,7 +562,6 @@ function translateGPT(selectedText, number_of_highlighted_words) {
       window.addEventListener("scroll", handleScroll);
     })
     .catch((err) => {
-      console.log(err)
       choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
                                     <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
                                     <button class="closePopup">X</button>
@@ -634,8 +639,8 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
             <div id="toast-copy">
               Saved to clipboard!
             </div>
-            <div style="margin:0px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <div style="margin: 0px 0px 1px 2px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 1px 4px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
               <div id="toast">
                 Saved!
               </div>

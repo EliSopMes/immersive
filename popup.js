@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="item">
-              <div class="title">Care to Share More?</div>
+              <div class="title">Leave Feedback</div>
               <div class="content" id="pin-popup">
                 <textarea name="feedback" rows="5" id="inputText" placeholder="What would you like to tell us?" style="width: 250px;"></textarea>
                 <br>
