@@ -23,14 +23,17 @@
 #popup-styling {
   img {
     height: 28px;
+    padding: 3px;
     color: black;
     justify-content: space-between;
     background: transparent;
     position: relative;
+    border-radius: 3px;
   }
 
   img:hover {
     cursor: pointer;
+    background-color: #FFDB58;
   }
 
   button {

@@ -69,7 +69,7 @@ function createPopup(selectedText, number_of_highlighted_words) {
     popup.style.background = "white";
     popup.style.border = "1px solid #D9D9D9";
     popup.style.borderRadius = "8px";
-    popup.style.padding = "8px 12px";
+    popup.style.padding = "5px 9px";
     popup.style.zIndex = "9999";
     popup.style.boxShadow = "rgba(0, 0, 0, 0.24) 0px 3px 8px";
 
@@ -88,7 +88,7 @@ function createPopup(selectedText, number_of_highlighted_words) {
           <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" style="height:24px; margin-top:1.5px;" alt="simplify" title="simplify" class="context-icons">
           <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
           <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-          <button class="closePopup">X</button>
+          <button class="closePopup" style="padding-right: 3px;">X</button>
         </div>
       `;
     }
