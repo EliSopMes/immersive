@@ -26,6 +26,20 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   } else {
     console.log("⏳ Tab still loading or not the correct URL:");
   }
+
+  if (changeInfo.status === 'complete' && tab.url.includes("https://immersive-server.netlify.app")) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ["content.js"],
+    });
+    chrome.scripting.insertCSS({
+      target: { tabId: tab.id },
+      files: ["styles.css"]
+    });
+    console.log("✅ content.js injected on page load.");
+  } else {
+    console.log("⏳ Tab still loading or not the correct URL:");
+  }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -99,3 +113,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
 });
+
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.message === "icon_clicked") {
+    const tabId = request.tabId
+
+    if (!tabId) {
+      console.error("❌ Could not find the tab ID.");
+      return;
+    }
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ["content.js"]
+      });
+      console.log("✅ content.js injected successfully.");
+
+      await chrome.scripting.insertCSS({
+        target: { tabId },
+        files: ["styles.css"]
+      });
+      console.log("✅ styles.css injected successfully.");
+    } catch (error) {
+      console.error("❌ Failed to inject script or styles:", error);
+    }
+  }
+})

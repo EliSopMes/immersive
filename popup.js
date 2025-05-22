@@ -1,6 +1,17 @@
 let isSpeaking = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0) {
+      chrome.runtime.sendMessage({
+        message: "icon_clicked",
+        tabId: tabs[0].id // Pass the active tab ID explicitly
+      });
+    } else {
+      console.error("❌ No active tab found.");
+    }
+  });
+
   chrome.storage.local.get(["supabaseToken", "expires_at"], async ({ supabaseToken, expires_at }) => {
     const root = document.getElementById("popup-root");
 
@@ -293,8 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <div style="display: flex; justify-content: space-between;">
                                               <p>${vocab.original_word} (${vocab.word_type})</p>
                                               <div style="display: flex;">
-                                                <img height="16" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-                                                <img height="14" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
+                                                <img height="16" class="hover-indication" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+                                                <img height="14" class="hover-indication" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
                                               </div>
                                             </div>
                                             <p>${vocab.translated_word}</p>
@@ -348,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.speechSynthesis.cancel(); // Stop speech if already speaking
                     isSpeaking = false;
                   } else {
-                    const utterance = new SpeechSynthesisUtterance(vocab[0]);
+                    const utterance = new SpeechSynthesisUtterance(vocab.original_word);
                     utterance.lang = 'de'; // Set language code (e.g., "de" for German, "en" for English)
                     utterance.onend = () => {
                       isSpeaking = false; // Reset when done
@@ -357,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     isSpeaking = true;
                   }
                 })
-              }, 0);
+              }, 100);
             })
           } else {
             vocabListHtml.innerHTML = "<div>You haven't saved any vocabulary yet.</div>";
@@ -369,35 +380,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       })
     }
-
-    const vocabListDiv = document.getElementById('vocab-div')
-    chrome.storage.local.get("vocabulary_list", (data) => {
-      let vocabList = data.vocabulary_list || [];
-      if (vocabListDiv.style.display === "none" && vocabList.length > 0) {
-        vocabListDiv.style.display = 'block'
-        const exportBtn = document.getElementById('exportBtn')
-        if (exportBtn !== null) {
-          exportBtn.addEventListener('click', () => {
-            let textContent = "German\tEnglish\n";
-            vocabList.forEach(([german, english]) => {
-              textContent += `${german}\t${english}\n`;
-            });
-
-            // Create a Blob with the text data
-            let blob = new Blob([textContent], { type: "text/plain" });
-
-            // Create a download link
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "vocabulary_list.txt"; // Name of the file
-
-            // Trigger the download
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-          })
-        }
-      }
-    });
  })
