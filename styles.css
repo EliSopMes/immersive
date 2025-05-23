@@ -132,7 +132,7 @@
   }
 }
 
-#toast, #toast-copy {
+#toast, #toast-copy, #toast-copy-after, #toast-after {
   visibility: hidden;
   min-width: 60px;
   background-color: black;

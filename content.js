@@ -648,13 +648,13 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
           </div>
           <p class="choice-text">${translation.translation}</p>
           <div id="choice-popup-styling" class="three" style="${number_of_words > 1 ? "width:50px" : ""}">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-            <div id="toast-copy">
+            <img style="${number_of_words < 2 ? "" : "display:none;"}" id="btn-audio-after" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+            <img id="btn-copy-after" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+            <div id="toast-copy-after">
               Saved to clipboard!
             </div>
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="${number_of_highlighted_words > 1 ? "display: none;" : ""}height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-            <div id="toast">
+            <img id="btn-vocab-after" src="${chrome.runtime.getURL("pngs/star.png")}" style="${number_of_highlighted_words > 1 ? "display: none;" : ""}height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <div id="toast-after">
               Saved!
             </div>
           </div>
@@ -664,25 +664,25 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
       oldPopup.insertAdjacentHTML('beforeend', additionalHTML)
 
       setTimeout(() => {
-        document.getElementById("btn-copy").addEventListener("click", () => {
+        document.getElementById("btn-copy-after")?.addEventListener("click", () => {
           navigator.clipboard.writeText(translation);
-          const toast = document.getElementById('toast-copy');
+          const toast = document.getElementById('toast-copy-after');
           toast.style.visibility = "visible";
           setTimeout(() => {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-vocab")?.addEventListener("click", () => {
+        document.getElementById("btn-vocab-after")?.addEventListener("click", () => {
           const germanWord = translation.article ? `${translation.article} ${selectedText}` : selectedText
           save_vocabulary(germanWord, translation.translation, translation.word_type)
-          const toast = document.getElementById('toast');
+          const toast = document.getElementById('toast-after');
           toast.style.visibility = "visible";
           setTimeout(() => {
             toast.style.visibility = "hidden";
           }, 1000);
         });
-        document.getElementById("btn-audio").addEventListener("click", (event) => {
-          pronounce(selectedText, 'en');
+        document.getElementById("btn-audio-after")?.addEventListener("click", (event) => {
+          pronounce(selectedText, 'de');
         });
       }, 100);
     })
