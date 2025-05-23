@@ -247,129 +247,145 @@ function simplify(selectedText, level, number_of_highlighted_words) {
         // Handling custom error messages
         alert(`Server Error: ${data.error}`);
       }
-      // const simplified = taskToDo === "define" ? JSON.parse(data.simplified) : data.simplified;
-      const simplified = data.simplified;
-      const synonyms = simplified.synonyms ? `<strong><p style="margin-bottom: 5px;">Synonyme</p></strong><ul style="list-style-type:disc; margin-bottom: 20px;"> ${simplified.synonyms.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
-      const examples = simplified.examples ? `<strong><p style="margin-bottom: 5px;">Beispiele</p></strong><ul style="list-style-type:disc; margin-bottom: 20px;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
-      innerDefine =  `<div id="choicePopup" style="padding: 2px 6px;">
-          <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-            <button class="closePopup">X</button>
-          </div>
-          <hr>
-          <p class="choice-text" style="margin-bottom: 0px;">${simplified.article ? simplified.article : ""} <strong>${selectedText}</strong> (${simplified.word_type})</p>
-          <p class="choice-text" style="margin-bottom: 20px; margin-top: 2px;">${simplified.plural ? "Plural: " + simplified.plural : ""}</p>
-          <strong><p style="margin-bottom: 5px;">Bedeutung</p></strong>
-          <p class="choice-text" style="margin-bottom: 20px; margin-top:0px;">${simplified.meaning}</p>
-          ${synonyms ? synonyms : ""}
-          ${examples ? examples : ""}
-          <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-            <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-            <div id="toast-copy">
-              Saved to clipboard!
+
+      if (data.simplified === "not german") {
+        choicePopup.innerHTML = `
+          <div id="choicePopup">
+            <div style="display: flex; justify-content: space-between;">
+              <p style="color: #555555; margin: 4px 0px 8px 0px">Error</p>
+              <button class="closePopup">X</button>
             </div>
-            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-            <div id="toast">
-              Saved!
-            </div>
+            <hr>
+            <p class="choice-text">Currently only available for simplifying from German text.</p>
           </div>
-        </div>
-      `;
-      innerSimplify = `<div id="choicePopup">
-          <div style="display: flex; justify-content: space-between;">
-            <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-            <button class="closePopup">X</button>
-          </div>
-          <hr>
-          <p class="choice-text">${simplified}</p>
-          <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
-            <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-            <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
-            <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
-            <div id="toast-copy">
-              Saved to clipboard!
-            </div>
-          </div>
-        </div>
-      `;
-      // Add buttons
-      if (taskToDo === "define") {
-        choicePopup.innerHTML = innerDefine
+        `;
+        setTimeout(() => {
+          document.querySelector(".closePopup").addEventListener("click", () => {
+            choicePopup.remove();
+            cleanup();
+          });
+        }, 100);
       } else {
-        choicePopup.innerHTML = innerSimplify
-      }
+        // const simplified = taskToDo === "define" ? JSON.parse(data.simplified) : data.simplified;
+        const simplified = data.simplified;
+        const synonyms = simplified.synonyms ? `<strong><p style="margin-bottom: 5px;">Synonyme</p></strong><ul style="list-style-type:disc; margin-bottom: 20px;"> ${simplified.synonyms.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
+        const examples = simplified.examples ? `<strong><p style="margin-bottom: 5px;">Beispiele</p></strong><ul style="list-style-type:disc; margin-bottom: 20px;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
+        innerDefine =  `<div id="choicePopup" style="padding: 2px 6px;">
+            <div style="display: flex; justify-content: space-between;">
+              <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+              <button class="closePopup">X</button>
+            </div>
+            <hr>
+            <p class="choice-text" style="margin-bottom: 0px;">${simplified.article ? simplified.article : ""} <strong>${selectedText}</strong> (${simplified.word_type})</p>
+            <p class="choice-text" style="margin-bottom: 20px; margin-top: 2px;">${simplified.plural ? "Plural: " + simplified.plural : ""}</p>
+            <strong><p style="margin-bottom: 5px;">Bedeutung</p></strong>
+            <p class="choice-text" style="margin-bottom: 20px; margin-top:0px;">${simplified.meaning}</p>
+            ${synonyms ? synonyms : ""}
+            ${examples ? examples : ""}
+            <div id="choice-popup-styling" class="four" style="display: flex; justify-content: space-between;">
+              <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+              <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+              <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+              <div id="toast-copy">
+                Saved to clipboard!
+              </div>
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
+              </div>
+            </div>
+          </div>
+        `;
+        innerSimplify = `<div id="choicePopup">
+            <div style="display: flex; justify-content: space-between;">
+              <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
+              <button class="closePopup">X</button>
+            </div>
+            <hr>
+            <p class="choice-text">${simplified}</p>
+            <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
+              <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+              <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
+              <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
+              <div id="toast-copy">
+                Saved to clipboard!
+              </div>
+            </div>
+          </div>
+        `;
+        // Add buttons
+        if (taskToDo === "define") {
+          choicePopup.innerHTML = innerDefine
+        } else {
+          choicePopup.innerHTML = innerSimplify
+        }
+        setTimeout(() => {
+          document.getElementById("btn-copy").addEventListener("click", () => {
+            navigator.clipboard.writeText(simplified);
+            const toast = document.getElementById('toast-copy');
+            toast.style.visibility = "visible";
+            setTimeout(() => {
+              toast.style.visibility = "hidden";
+            }, 1000);
+          });
+          document.getElementById("btn-vocab")?.addEventListener("click", () => {
+            const germanWord = simplified.article ? `${simplified.article} ${selectedText}` : selectedText
+            save_vocabulary(germanWord, simplified.translation, simplified.word_type)
+            const toast = document.getElementById('toast');
+            toast.style.visibility = "visible";
+            setTimeout(() => {
+              toast.style.visibility = "hidden";
+            }, 1000);
+          });
+          document.getElementById("btn-translate").addEventListener("click", () => {
+            const text_to_be_translated = taskToDo === "define" ? selectedText : simplified
+            translate_from_simplified(text_to_be_translated, number_of_highlighted_words);
+          });
+          document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
+            const isInsidePopup = event.target.closest("#choice-popup-styling");
+            if (isInsidePopup) return;
+            let selectedText = window.getSelection().toString().trim();
+            let number_highlighted_words = selectedText.split(/\s+/).length;
+            if (selectedText && selectedText !== "") {
+              translate_from_simplified(selectedText, number_highlighted_words);
+            }
+          });
+          document.getElementById("btn-audio").addEventListener("click", () => {
+            const toBePronounced = taskToDo === "define" ? selectedText : simplified;
+            pronounce(toBePronounced, 'de');
+          });
+          document.querySelector(".closePopup").addEventListener("click", () => {
+            choicePopup.remove();
+            cleanup();
+          });
+        }, 100);
+        function cleanup() {
+          document.removeEventListener("click", handleOutsideClick);
+          window.removeEventListener("scroll", handleScroll());
+        }
 
-      // Append choicePopup to body
-
-      setTimeout(() => {
-        document.getElementById("btn-copy").addEventListener("click", () => {
-          navigator.clipboard.writeText(simplified);
-          const toast = document.getElementById('toast-copy');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-vocab")?.addEventListener("click", () => {
-          const germanWord = simplified.article ? `${simplified.article} ${selectedText}` : selectedText
-          save_vocabulary(germanWord, simplified.translation, simplified.word_type)
-          const toast = document.getElementById('toast');
-          toast.style.visibility = "visible";
-          setTimeout(() => {
-            toast.style.visibility = "hidden";
-          }, 1000);
-        });
-        document.getElementById("btn-translate").addEventListener("click", () => {
-          const text_to_be_translated = taskToDo === "define" ? selectedText : simplified
-          translate_from_simplified(text_to_be_translated, number_of_highlighted_words);
-        });
-        document.getElementById("choicePopup").addEventListener("mouseup", function (event) {
-          const isInsidePopup = event.target.closest("#choice-popup-styling");
-          if (isInsidePopup) return;
-          let selectedText = window.getSelection().toString().trim();
-          let number_highlighted_words = selectedText.split(/\s+/).length;
-          if (selectedText && selectedText !== "") {
-            translate_from_simplified(selectedText, number_highlighted_words);
+        function handleOutsideClick(event) {
+          if (!choicePopup.contains(event.target)) {
+            choicePopup.remove();
+            cleanup();
           }
-        });
-        document.getElementById("btn-audio").addEventListener("click", () => {
-          const toBePronounced = taskToDo === "define" ? selectedText : simplified;
-          pronounce(toBePronounced, 'de');
-        });
-        document.querySelector(".closePopup").addEventListener("click", () => {
-          choicePopup.remove();
-          cleanup();
-        });
-      }, 100);
-
-      function cleanup() {
-        document.removeEventListener("click", handleOutsideClick);
-        window.removeEventListener("scroll", handleScroll());
-      }
-
-      function handleOutsideClick(event) {
-        if (!choicePopup.contains(event.target)) {
-          choicePopup.remove();
-          cleanup();
         }
-      }
 
-      function handleScroll() {
-        const popupRect = choicePopup.getBoundingClientRect();
-        const isOutOfView =
-          popupRect.bottom < 0 || popupRect.top > window.innerHeight;
+        function handleScroll() {
+          const popupRect = choicePopup.getBoundingClientRect();
+          const isOutOfView =
+            popupRect.bottom < 0 || popupRect.top > window.innerHeight;
 
-        if (isOutOfView) {
-          choicePopup.remove();
-          cleanup();
+          if (isOutOfView) {
+            choicePopup.remove();
+            cleanup();
+          }
         }
+        setTimeout(() => {
+          document.addEventListener("click", handleOutsideClick);
+        }, 0);
+        window.addEventListener("scroll", handleScroll);
       }
-      setTimeout(() => {
-        document.addEventListener("click", handleOutsideClick);
-      }, 0);
-      window.addEventListener("scroll", handleScroll);
     } catch (err) {
       choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
                                   <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
@@ -483,18 +499,16 @@ function translateGPT(selectedText, number_of_highlighted_words) {
               <p class="choice-text"><span style="color: grey;">${translation.article ? translation.article : ""}</span> ${selectedText} (${translation.word_type}) <span style="color: grey;">${translation.infinitive ? "--> Infinitive: " + translation.infinitive : ""}</span></p>
             </div>
             <p class="choice-text">${translation.translation}</p>
-            <div id="choice-popup-styling" class="three" style="${number_of_highlighted_words === 1 ? "width: 100px" : ""}">
+            <div id="choice-popup-styling" class="three" style="${number_of_highlighted_words === 1 ? "width: 110px" : ""}">
               <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
               <img id="btn-simple" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" style="height: 20px; margin: 2px 2px 1px 6px;" alt="simplify" title="simplify" class="context-icons">
               <img id="btn-copy" src="${chrome.runtime.getURL("pngs/copy-icon.png")}" alt="copy" title="copy" class="context-icons">
               <div id="toast-copy">
                 Saved to clipboard!
               </div>
-              <div style="margin: 0px 0px 1px 2px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-                <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-                <div id="toast">
-                  Saved!
-                </div>
+              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="${number_of_highlighted_words > 1 ? "display: none;" : ""}height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+              <div id="toast">
+                Saved!
               </div>
             </div>
           </div>
@@ -639,11 +653,9 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
             <div id="toast-copy">
               Saved to clipboard!
             </div>
-            <div style="margin: 0px 0px 1px 2px; height: 22px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
-              <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="height: 20px; margin: 0px 0px 1px 4px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
-              <div id="toast">
-                Saved!
-              </div>
+            <img id="btn-vocab" src="${chrome.runtime.getURL("pngs/star.png")}" style="${number_of_highlighted_words > 1 ? "display: none;" : ""}height: 20px; margin: 0px 0px 2px 0px;" alt="add to vocabulary list" title="add to vocabulary list" class="context-icons">
+            <div id="toast">
+              Saved!
             </div>
           </div>
         </div>
@@ -670,7 +682,7 @@ function translate_from_simplified(selectedText, number_of_highlighted_words) {
           }, 1000);
         });
         document.getElementById("btn-audio").addEventListener("click", (event) => {
-          pronounce(translation, 'en');
+          pronounce(selectedText, 'en');
         });
       }, 100);
     })

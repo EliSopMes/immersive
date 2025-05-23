@@ -20,7 +20,8 @@
   cursor: pointer;
 }
 
-#popup-styling {
+
+#popup-styling, #choice-popup-styling {
   img {
     height: 28px;
     padding: 3px;
@@ -32,6 +33,11 @@
   }
 
   img:hover {
+    cursor: pointer;
+    background-color: #FFDB58;
+  }
+
+  button:hover {
     cursor: pointer;
     background-color: #FFDB58;
   }
@@ -151,6 +157,11 @@
     color: grey;
     border: none;
     margin: 4px 0px 8px 0px
+  }
+
+  button:hover {
+    cursor: pointer;
+    background-color: #FFDB58;
   }
 
   li {

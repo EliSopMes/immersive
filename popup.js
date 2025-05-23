@@ -303,8 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
               const vocabListItem = `<div id='list-item-${index}' class="vocab-card">
                                             <div style="display: flex; justify-content: space-between;">
                                               <p>${vocab.original_word} (${vocab.word_type})</p>
-                                              <div style="display: flex;">
-                                                <img height="16" class="hover-indication" id="btn-audio-${index}" style="margin-right: 10px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
+                                              <div id="vocab-card-styling" style="display: flex;">
+                                                <img height="16" class="hover-indication" id="btn-audio-${index}" style="margin-right: 8px;" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
                                                 <img height="14" class="hover-indication" id='vocab-${index}' src="${chrome.runtime.getURL("pngs/trash-can-solid.svg")}" alt="trash" title="delete" class="context-icons">
                                               </div>
                                             </div>
