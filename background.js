@@ -23,6 +23,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       files: ["styles.css"]
     });
     console.log("✅ content.js injected on page load.");
+    chrome.storage.local.set({ active: true });
   } else {
     console.log("⏳ Tab still loading or not the correct URL:");
   }
@@ -37,6 +38,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       files: ["styles.css"]
     });
     console.log("✅ content.js injected on page load.");
+    chrome.storage.local.set({ active: true });
   } else {
     console.log("⏳ Tab still loading or not the correct URL:");
   }
@@ -56,6 +58,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         files: ["styles.css"]
       });
       console.log("✅ styles.css injected successfully.");
+      chrome.storage.local.set({ active: true });
     } catch (error) {
       console.error("❌ Failed to inject script or styles:", error);
     }
@@ -69,28 +72,6 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'translate') {
-    translateText(request.text)
-      .then(translation => {
-          sendResponse({ translation: translation });
-      })
-      .catch(error => {
-          sendResponse({ error: error.message });
-      });
-    return true; // Indicates we want to send an async response
-  } else if (request.action === 'simplify') {
-    simplifyText(request.text)
-      .then(simplification => {
-        sendResponse({ simplified: simplification });
-      })
-      .catch(error => {
-        sendResponse({ error: error.message });
-      });
-    return true; // Indicates we want to send an async response
-  }
-});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'openPopup') {
@@ -135,6 +116,32 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         files: ["styles.css"]
       });
       console.log("✅ styles.css injected successfully.");
+      chrome.storage.local.set({ active: true });
+    } catch (error) {
+      console.error("❌ Failed to inject script or styles:", error);
+    }
+  }
+  if (request.message === "deactivate") {
+    const tabId = request.tabId
+
+    if (!tabId) {
+      console.error("❌ Could not find the tab ID.");
+      return;
+    }
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          if (window.cleanupMyExtension) {
+            window.cleanupMyExtension();
+            console.log("🧼 Extension deactivated and cleaned up.");
+          } else {
+            console.log("⚠️ Nothing to clean up.");
+          }
+        }
+      });
+      chrome.storage.local.set({ active: false });
     } catch (error) {
       console.error("❌ Failed to inject script or styles:", error);
     }

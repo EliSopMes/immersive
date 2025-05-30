@@ -1,16 +1,40 @@
 let isSpeaking = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs.length > 0) {
-      chrome.runtime.sendMessage({
-        message: "icon_clicked",
-        tabId: tabs[0].id // Pass the active tab ID explicitly
+  const toggle = document.getElementById('activate-toggle');
+
+  chrome.storage.local.get('active', (result) => {
+    toggle.checked = result.active === true;
+  });
+
+
+  toggle.addEventListener('change', (event) => {
+    if (event.target.checked === true) {
+      chrome.storage.local.set({ active: true });
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.runtime.sendMessage({
+            message: "icon_clicked",
+            tabId: tabs[0].id // Pass the active tab ID explicitly
+          });
+        } else {
+          console.error("❌ No active tab found.");
+        }
       });
     } else {
-      console.error("❌ No active tab found.");
+      chrome.storage.local.set({ active: true });
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.runtime.sendMessage({
+            message: "deactivate",
+            tabId: tabs[0].id // Pass the active tab ID explicitly
+          });
+        } else {
+          console.error("❌ No active tab found.");
+        }
+      });
     }
-  });
+  })
 
   chrome.storage.local.get(["supabaseToken", "expires_at"], async ({ supabaseToken, expires_at }) => {
     const root = document.getElementById("popup-root");
