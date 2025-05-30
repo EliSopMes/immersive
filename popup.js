@@ -3,10 +3,19 @@ let isSpeaking = false;
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.getElementById('activate-toggle');
 
-  chrome.storage.local.get('active', (result) => {
-    toggle.checked = result.active === true;
-  });
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const tabId = tabs[0]?.id;
+    if (!tabId) return;
 
+    // Run a content script snippet to check if the extension is active in that tab
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => !!window.myExtensionActive
+    }, (results) => {
+      const isActive = results?.[0]?.result;
+      toggle.checked = isActive === true;
+    });
+  });
 
   toggle.addEventListener('change', (event) => {
     if (event.target.checked === true) {
