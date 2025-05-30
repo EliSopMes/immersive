@@ -69,6 +69,30 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.tabs.create({
     url: "https://immersive-server.netlify.app/"
+  }, (tab) => {
+    // ✅ Safely get the tabId here
+    if (!tab || !tab.id) return;
+    console.log(tab.id)
+
+    const handleTabUpdated = (updatedTabId, changeInfo) => {
+      if (updatedTabId === tab.id && changeInfo.status === "complete") {
+        // ✅ Tab finished loading, now it's safe to set the icon
+        chrome.action.setIcon({
+          tabId: tab.id,
+          path: {
+            "16": "pngs/logo-on.png",
+            "32": "pngs/logo-on.png",
+            "48": "pngs/logo-on.png",
+            "128": "pngs/logo-on.png"
+          }
+        });
+
+        // ✅ Clean up listener after use
+        chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+      }
+    };
+
+    chrome.tabs.onUpdated.addListener(handleTabUpdated);
   });
 });
 
@@ -97,7 +121,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.message === "icon_clicked") {
+    console.log("hello")
     const tabId = request.tabId
+
+    chrome.action.setIcon({
+      tabId: tabId,
+      path: {
+        "16": "pngs/logo-on.png",
+        "32": "pngs/logo-on.png",
+        "48": "pngs/logo-on.png",
+        "128": "pngs/logo-on.png"
+      }
+    });
 
     if (!tabId) {
       console.error("❌ Could not find the tab ID.");
@@ -123,6 +158,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   if (request.message === "deactivate") {
     const tabId = request.tabId
+    chrome.action.setIcon({
+      tabId: tabId,
+      path: {
+        "16": "pngs/logo-off.png",
+        "32": "pngs/logo-off.png",
+        "48": "pngs/logo-off.png",
+        "128": "pngs/logo-off.png"
+      }
+    });
 
     if (!tabId) {
       console.error("❌ Could not find the tab ID.");

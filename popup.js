@@ -13,7 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
       func: () => !!window.myExtensionActive
     }, (results) => {
       const isActive = results?.[0]?.result;
+
       toggle.checked = isActive === true;
+      chrome.runtime.sendMessage({
+        message: isActive ? "set_icon_on" : "set_icon_off"
+      })
     });
   });
 
