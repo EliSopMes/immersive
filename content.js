@@ -118,7 +118,7 @@ if (!window.myExtensionActive) {
             <img id="btn2" src="${chrome.runtime.getURL("pngs/simple-icon.png")}" style="height:24px; margin-top:1.5px;" alt="simplify" title="simplify" class="context-icons">
             <img id="btn1" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
             <img id="btn3" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
-            <button class="closePopup" style="padding-right: 3px;">X</button>
+            <button class="closePopup" style="padding-right: 3px; font-weight:300; margin-bottom: 0px;">X</button>
           </div>
         `;
       }
@@ -221,8 +221,8 @@ if (!window.myExtensionActive) {
     choicePopup.innerHTML = `
       <div id="choicePopup" style="padding: 2px 0px 2px 6px;">
         <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-          <button class="closePopup">X</button>
+          <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Simplified content</p>
+          <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
         </div>
         <hr>
         <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
@@ -282,8 +282,8 @@ if (!window.myExtensionActive) {
           choicePopup.innerHTML = `
             <div id="choicePopup">
               <div style="display: flex; justify-content: space-between;">
-                <p style="color: #555555; margin: 4px 0px 8px 0px">Error</p>
-                <button class="closePopup">X</button>
+                <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Error</p>
+                <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
               </div>
               <hr>
               <p class="choice-text">Currently only available for simplifying from German text.</p>
@@ -302,8 +302,8 @@ if (!window.myExtensionActive) {
           const examples = simplified.examples ? `<strong><p style="margin-bottom: 5px;">Beispiele</p></strong><ul style="list-style-type:disc; margin-bottom: 20px;"> ${simplified.examples.map(synonym => `<li>${synonym}</li>`).join('')}</ul>` : ""
           innerDefine =  `<div id="choicePopup" style="padding: 2px 6px;">
               <div style="display: flex; justify-content: space-between;">
-                <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-                <button class="closePopup">X</button>
+                <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Simplified content</p>
+                <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
               </div>
               <hr>
               <p class="choice-text" style="margin-bottom: 0px;">${simplified.article ? simplified.article : ""} <strong>${selectedText}</strong> (${simplified.word_type})</p>
@@ -328,11 +328,13 @@ if (!window.myExtensionActive) {
           `;
           innerSimplify = `<div id="choicePopup">
               <div style="display: flex; justify-content: space-between;">
-                <p style="color: #555555; margin: 4px 0px 8px 0px">Simplified content</p>
-                <button class="closePopup">X</button>
+                <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Simplified content</p>
+                <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
               </div>
               <hr>
               <p class="choice-text">${simplified}</p>
+
+              <p class="instruction-text">Double-click on any word in the text to get its individual translation</p>
               <div id="choice-popup-styling" class="three" style="display: flex; justify-content: space-between;">
                 <img id="btn-audio" src="${chrome.runtime.getURL("pngs/audio-icon.png")}" alt="audio" title="audio" class="context-icons">
                 <img id="btn-translate" src="${chrome.runtime.getURL("pngs/translate-icon.png")}" alt="translate" title="translate" class="context-icons">
@@ -418,8 +420,8 @@ if (!window.myExtensionActive) {
         }
       } catch (err) {
         choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
-                                    <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
-                                    <button class="closePopup">X</button>
+                                    <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Fetch failed</p>
+                                    <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
                                   </div>
                                   <p>Please try again later.</p>
                                   <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
@@ -467,8 +469,8 @@ if (!window.myExtensionActive) {
     choicePopup.innerHTML = `
       <div id="choicePopup">
         <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-          <button class="closePopup">X</button>
+          <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Translation</p>
+          <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
         </div>
         <hr>
         <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
@@ -501,8 +503,8 @@ if (!window.myExtensionActive) {
           choicePopup.innerHTML = `
             <div id="choicePopup">
               <div style="display: flex; justify-content: space-between;">
-                <p style="color: #555555; margin: 4px 0px 8px 0px">Error</p>
-                <button class="closePopup">X</button>
+                <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Error</p>
+                <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
               </div>
               <hr>
               <p class="choice-text">Currently only available for translating from German to English</p>
@@ -521,8 +523,8 @@ if (!window.myExtensionActive) {
           choicePopup.innerHTML = `
             <div id="choicePopup">
               <div style="display: flex; justify-content: space-between;">
-                <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-                <button class="closePopup">X</button>
+                <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Translation</p>
+                <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
               </div>
               <hr>
               <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
@@ -607,8 +609,8 @@ if (!window.myExtensionActive) {
       })
       .catch((err) => {
         choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
-                                      <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
-                                      <button class="closePopup">X</button>
+                                      <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Fetch failed</p>
+                                      <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
                                     </div>
                                     <p>Please try again later.</p>
                                   <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
@@ -631,8 +633,8 @@ if (!window.myExtensionActive) {
     const additionalHTML = `
       <div id="translate-from-simplified">
         <div style="display: flex; justify-content: space-between;">
-          <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
-          <button class="closePopup">X</button>
+          <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Translation</p>
+          <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
         </div>
         <hr>
         <div style="display: flex; justify-content: center; align-items: center; height: 80px;">
@@ -670,7 +672,7 @@ if (!window.myExtensionActive) {
         const additionalHTML = `
           <div id="translate-from-simplified">
             <div style="display: flex; justify-content: space-between;">
-              <p style="color: #555555; margin: 4px 0px 8px 0px">Translation</p>
+              <p style="color: #555555; margin: 4px 0px 8px 0px; font-weight: 300;">Translation</p>
             </div>
             <hr>
             <div style="margin:0px; padding:0px;${number_of_highlighted_words > 1 ? "display: none" : ""}">
@@ -718,8 +720,8 @@ if (!window.myExtensionActive) {
       })
       .catch((err) => {
         choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
-                                      <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
-                                      <button class="closePopup">X</button>
+                                      <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Fetch failed</p>
+                                      <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
                                     </div>
                                     <p>Please try again later.</p>
                                   <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>
@@ -765,8 +767,8 @@ if (!window.myExtensionActive) {
       })
       .catch((err) => {
         choicePopup.innerHTML = `<div style="display: flex; justify-content: space-between;">
-                                      <p style="color: #555555; margin: 4px 0px 8px 0px">Fetch failed</p>
-                                      <button class="closePopup">X</button>
+                                      <p style="color: #555555; margin: 4px 0px 0px 0px; font-weight: 300;">Fetch failed</p>
+                                      <button class="closePopup" style="font-weight:300; margin-bottom: 0px;">X</button>
                                     </div>
                                     <p>Please try again later.</p>
                                   <p>If the problem persists, copy this error and send it as feedback to Immersive:</p>

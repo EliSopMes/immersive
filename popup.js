@@ -171,6 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 "></div>
               </div>
             </div>
+            <div class="item">
+              <div class="title"><a href="https://joinimmersive.com/troubleshooting/" target="_blank" style="text-decoration:none;color: black;">Need help?</a></div>
+            </div>
             <br>
             <a href="#" id="logoutBtn" style="color: black;">Log out</a>
             <br><br>
